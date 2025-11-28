@@ -264,6 +264,13 @@ class RequestController extends Controller
                     ->where('request_type_id', 3)
                     ->orderBy('date', 'desc')
                     ->paginate(30);
+                } else if ($userDivisi == 1) {
+                    $requestBarangs = RequestBarang::with('user.division.area', 'closedby', 'request_detail', 'request_type', 'request_approval')
+                        ->whereHas('user.division.area', function ($query) {
+                            $query->whereIn('area_id', [14, 4]);
+                        })
+                        ->orderBy('date', 'desc')
+                        ->paginate(30);
                 } else {
                     $requestBarangs = RequestBarang::with('user','closedby','request_detail','request_type','request_approval')
                     ->whereHas('request_type', function($q) use($userDivisi) { $q->where('pic_division_id', $userDivisi); })

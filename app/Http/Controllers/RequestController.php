@@ -208,7 +208,7 @@ class RequestController extends Controller
                 } else if ($request->selectStatusAkhir != null && $userDivisi == 9) {
                     $requestBarangs = RequestBarang::with('user','closedby','request_detail','request_type')
                     ->whereHas('user.division.area', function ($query) {
-                        $query->whereIn('area_id', [4,5,14]);
+                        $query->whereIn('area_id', [4,5,14,19]);
                     })
                     ->where('status_client', $request->selectStatusAkhir)
                     ->where('request_type_id', 2)
@@ -235,7 +235,7 @@ class RequestController extends Controller
                 } else if ($userDivisi == 9) {
                     $requestBarangs = RequestBarang::with('user.division.area','closedby','request_detail','request_type','request_approval')
                     ->whereHas('user.division.area', function ($query) {
-                        $query->whereIn('area_id', [4,5,14]);
+                        $query->whereIn('area_id', [4,5,14,19]);
                     })
                     ->where('request_type_id', 2)
                     ->orderBy('date', 'desc')

@@ -75,7 +75,7 @@ class AppServiceProvider extends ServiceProvider
             if ($userDivisi == 9) {
                 $notifRequestApprov = RequestBarang::with('user.division.area', 'request_approval')
                 ->whereHas('user.division.area', function ($query) {
-                    $query->whereIn('area_id', [4,5]);
+                    $query->whereIn('area_id', [4,5,14,19]);
                 })
                 ->whereHas('request_approval', function ($query) {
                     $query->where('approval_type', 'MANAGER')

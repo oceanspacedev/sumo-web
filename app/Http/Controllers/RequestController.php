@@ -235,7 +235,7 @@ class RequestController extends Controller
                 } else if ($userDivisi == 9) {
                     $requestBarangs = RequestBarang::with('user.division.area','closedby','request_detail','request_type','request_approval')
                     ->whereHas('user.division.area', function ($query) {
-                        $query->whereIn('area_id', [4,5,14,19]);
+                        $query->whereIn('area_id', [4,5,14]);
                     })
                     ->where('request_type_id', 2)
                     ->orderBy('date', 'desc')
@@ -611,6 +611,33 @@ class RequestController extends Controller
         return view('request.editStatusAcc', [
             'requestBarang' => $requestBarang,
         ]);
+    }
+
+    public function editAuditNotes(RequestBarang $requestBarang)
+    {
+        return view('request.editAuditNotes', [
+            'requestBarang' => $requestBarang,
+        ]);
+    }
+
+    public function updateAuditNotes(Request $request, RequestBarang $requestBarang)
+    {
+        try {
+            $userRole = Auth::user()->role_id;
+            $userDivisi = Auth::user()->division_id;
+
+            // Hanya user dengan role_id = 3 dan division_id = 12 yang bisa update
+            if ($userRole == 3 && $userDivisi == 12) {
+                $requestBarang->audit_notes = $request->audit_notes;
+                $requestBarang->save();
+
+                return redirect('request/'.$requestBarang->id)->with('success', 'Catatan Audit berhasil disimpan !');
+            }
+
+            return redirect('request/'.$requestBarang->id)->with('error', 'Anda tidak memiliki akses untuk mengubah catatan audit !');
+        } catch (Exception $e) {
+            return redirect('request/'.$requestBarang->id)->with(['error' => $e->getMessage()]);
+        }
     }
 
     public function updateStatusClient(Request $request, RequestBarang $requestBarang)

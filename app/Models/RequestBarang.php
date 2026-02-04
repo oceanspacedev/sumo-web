@@ -14,7 +14,7 @@ class RequestBarang extends Model
 
     protected $guarded = ['id'];
 
-    protected $fillable = ['request_code', 'user_id', 'date', 'total_cost', 'status_po', 'status_client', 'closed_by', 'closed_at', 'approved_by', 'approved_at', 'request_type_id', 'request_file'];
+    protected $fillable = ['request_code', 'user_id', 'date', 'total_cost', 'status_po', 'status_client', 'closed_by', 'closed_at', 'approved_by', 'approved_at', 'request_type_id', 'request_file', 'notes', 'user_notes', 'audit_notes'];
 
     protected $hidden = [
         'created_at',

@@ -113,18 +113,22 @@
                                 <div class="col-md-12 text-left" style="margin-top: 30px;">
                                     <h4>Catatan GA : {{ $requestBarang->notes }}</h4>
                                     <h4>Catatan User : {{ $requestBarang->user_notes }}</h4>
+                                    <h4>Catatan Audit : {{ $requestBarang->audit_notes }}</h4>
                                 </div>
                                 <div class="col-md-11 text-right">
                                     <h4>Total Biaya : Rp {{ number_format($grandTotal, 0, ',', '.') }}</h4>
                                 </div>
                             </div>
                             <div class="text-right">
-                                <form action="/fixRequest/{{$requestBarang->id}}" method="POST">
+                                <form action="/fixRequest/{{$requestBarang->id}}" method="POST" style="display: inline-block;">
                                     {{csrf_field()}}
                                     @if (auth()->user()->role_id == 3 && in_array(auth()->user()->division_id, [9, 12, 80]))
                                     <button type="submit" class="btn btn-info" onclick="return confirm('Pengajuan ini tanpa revisi, apakah semua sudah disetujui ?')">SELESAI</button>
                                     @endif
                                 </form>
+                                @if (auth()->user()->role_id == 3 && auth()->user()->division_id == 12)
+                                <a href="/request/{{$requestBarang->id}}/editAuditNotes" class="btn btn-warning">EDIT CATATAN AUDIT</a>
+                                @endif
                             </div>
 						</div>
 					</div>

@@ -1,7 +1,5 @@
 <?php
 
-use Faker\Guesser\Name;
-
 namespace App\Http\Controllers\API;
 
 use Exception;

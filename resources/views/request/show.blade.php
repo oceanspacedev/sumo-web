@@ -61,7 +61,7 @@
                                             <td>@if ((auth()->user()->role_id < 4) || in_array(auth()->user()->division->area_id, [3, 4, 5, 11])) {{ $detail->qty_approved }} @endif</td>
                                             <td>@if ((auth()->user()->role_id < 4) || in_array(auth()->user()->division->area_id, [3, 4, 5, 11])) 
                                                     @if (in_array($requestBarang->user->division->area_id, [4, 5, 11]))
-                                                        Rp {{ $detail->qty_approved === null ? number_format($detail->qty_request * $detail->product->price, 0, ',', '.') : $detail->qty_approved === 0 ? number_format($detail->qty_approved * $detail->product->price, 0, ',', '.') : number_format($detail->qty_approved * $detail->product->price, 0, ',', '.') }}
+                                                        Rp {{ $detail->qty_approved === null ? number_format($detail->qty_request * $detail->product->price, 0, ',', '.') : ($detail->qty_approved === 0 ? number_format($detail->qty_approved * $detail->product->price, 0, ',', '.') : number_format($detail->qty_approved * $detail->product->price, 0, ',', '.')) }}
                                                     @else 
                                                         Rp {{ number_format($detail->qty_request * $detail->product->price, 0, ',', '.') }}
                                                     @endif

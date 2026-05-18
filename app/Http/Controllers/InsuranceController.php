@@ -279,7 +279,9 @@ class InsuranceController extends Controller
     public function exportUpdate($id)
     {
         $polis = Insurance::find($id);
+        
+        $safeFileName = str_replace(['/', '\\'], '-', $polis->policy_number);
 
-        return Excel::download(new InsuranceUpdateExport($polis->id, $polis->policy_number), 'asuransi_update_nopol-'.$polis->policy_number.'_.xlsx');
+        return Excel::download(new InsuranceUpdateExport($polis->id, $polis->policy_number), 'asuransi_update_nopol-'.$safeFileName.'_.xlsx');
     }
 }

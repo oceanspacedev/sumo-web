@@ -1,6 +1,9 @@
 @extends('layouts.master')
 
 @section('content')
+    @php
+        $canManageInsurance = auth()->user()->canManageInsurance();
+    @endphp
     <div class="main">
         <div class="main-content">
             <div class="container-fluid">
@@ -50,13 +53,17 @@
                                             <a href="javascript:{}" onclick="document.getElementById('inputStatus').submit();" class="btn btn-info" ><span class="lnr lnr-magnifier"></span></a>
                                             </div>
                                         </form>
-                                    </div>
-                                    <div class="col-md-5 text-right">
-                                        <a href="/insurance/create" class="btn btn-info" data-toggle="modal" data-target="#addinsurancesModal" data-toggle="tooltip" data-placement="top" title="Tambah data baru"><span class="lnr lnr-plus-circle"></span></a>
-                                        <a href="/insurance/export" class="btn btn-primary" data-toggle="tooltip" data-placement="bottom" title="Export Asuransi"><span class="lnr lnr-download"></span></a>
-                                        <a class="btn btn-success" data-toggle="modal" data-target=".importModal" data-toggle="tooltip" data-placement="top" title="Import Asuransi"><span class="lnr lnr-upload"></span></a>
-                                        <a href="/insurance/export/template" class="btn btn-default" data-toggle="tooltip" data-placement="top" title="Download template"><span class="lnr lnr-text-align-justify"></span></a>
-                                    </div>
+	                                    </div>
+	                                    <div class="col-md-5 text-right">
+	                                        @if ($canManageInsurance)
+	                                        <a href="/insurance/create" class="btn btn-info" data-toggle="modal" data-target="#addinsurancesModal" data-toggle="tooltip" data-placement="top" title="Tambah data baru"><span class="lnr lnr-plus-circle"></span></a>
+	                                        @endif
+	                                        <a href="/insurance/export" class="btn btn-primary" data-toggle="tooltip" data-placement="bottom" title="Export Asuransi"><span class="lnr lnr-download"></span></a>
+	                                        @if ($canManageInsurance)
+	                                        <a class="btn btn-success" data-toggle="modal" data-target=".importModal" data-toggle="tooltip" data-placement="top" title="Import Asuransi"><span class="lnr lnr-upload"></span></a>
+	                                        <a href="/insurance/export/template" class="btn btn-default" data-toggle="tooltip" data-placement="top" title="Download template"><span class="lnr lnr-text-align-justify"></span></a>
+	                                        @endif
+	                                    </div>
                                     <br>
                                 </div>
                             </div>
@@ -281,8 +288,9 @@
         </div>
     </div>
 
-    <!-- Modal Create -->
-    <div class="modal fade" id="addinsurancesModal" role="dialog" aria-labelledby="addinsurancesModalLabel">
+	    <!-- Modal Create -->
+        @if ($canManageInsurance)
+	    <div class="modal fade" id="addinsurancesModal" role="dialog" aria-labelledby="addinsurancesModalLabel">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <div class="modal-header">
@@ -397,8 +405,8 @@
                 </div>
             </div>
         </div>
-    </div>
-    <!-- Modal -->
+	    </div>
+	    <!-- Modal -->
     <form action="/insurance/import" method="POST" enctype="multipart/form-data">
     @csrf
     <div class="modal fade importModal" tabindex="-1" role="dialog" aria-labelledby="importModalLabel" aria-hidden="true">
@@ -421,6 +429,7 @@
                 </div>
             </form>
         </div>
-    </div>
-</div>
-@stop
+	    </div>
+	</div>
+        @endif
+	@stop

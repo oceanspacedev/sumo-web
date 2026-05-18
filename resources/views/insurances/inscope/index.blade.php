@@ -1,6 +1,9 @@
 @extends('layouts.master')
 
 @section('content')
+    @php
+        $canManageInsurance = auth()->user()->canManageInsurance();
+    @endphp
     <div class="main">
         <div class="main-content">
             <div class="container-fluid">
@@ -23,32 +26,38 @@
                                 <div class="col-md-6">
                                     <h3 class="panel-title">Data Cakupan Asuransi</h3>
                                     <br>
-                                </div>
-                                <div class="col-md-6 text-right">
-                                    <a href="/inscope/create" class="btn btn-info" data-toggle="modal" data-target="#addinscopesModal" data-toggle="tooltip" data-placement="top" title="Tambah data"><span class="lnr lnr-plus-circle"></span></a>
-                                </div>
+	                                </div>
+	                                <div class="col-md-6 text-right">
+	                                    @if ($canManageInsurance)
+	                                    <a href="/inscope/create" class="btn btn-info" data-toggle="modal" data-target="#addinscopesModal" data-toggle="tooltip" data-placement="top" title="Tambah data"><span class="lnr lnr-plus-circle"></span></a>
+	                                    @endif
+	                                </div>
                             </div>
                             <br><br><br>
                             <div class="panel-body table-responsive">
                                 <table class="table table-hover">
                                     <thead>
                                     <tr>
-                                        <th>NO</th>
-                                        <th>Cakupan</th>
-                                        <th>Aksi</th>
-                                    </tr>
+	                                        <th>NO</th>
+	                                        <th>Cakupan</th>
+	                                        @if ($canManageInsurance)
+	                                        <th>Aksi</th>
+	                                        @endif
+	                                    </tr>
                                     </thead>
                                     <tbody>
                                     @foreach ($inscopes as $inscope)
                                     <tr>
-                                        <td>{{ $loop->iteration }}</td>
-                                        <td>{{ $inscope->insurance_scope }}</td>
-                                        <td>
-                                            <a href="/inscope/{{$inscope->id}}/edit" class="btn btn-warning" data-toggle="modal" type="button"><span class="lnr lnr-pencil"></span></a>
-                                            <!-- BUTTON DELETE -->
-                                            <!-- <a href="/inscope/{{$inscope->id}}/delete" class="btn btn-danger btn-sm" onclick="return confirm('Yakin akan menghapus data ?')">Hapus</a> -->
-                                        </td>
-                                    </tr>
+	                                        <td>{{ $loop->iteration }}</td>
+	                                        <td>{{ $inscope->insurance_scope }}</td>
+	                                        @if ($canManageInsurance)
+	                                        <td>
+	                                            <a href="/inscope/{{$inscope->id}}/edit" class="btn btn-warning" data-toggle="modal" type="button"><span class="lnr lnr-pencil"></span></a>
+	                                            <!-- BUTTON DELETE -->
+	                                            <!-- <a href="/inscope/{{$inscope->id}}/delete" class="btn btn-danger btn-sm" onclick="return confirm('Yakin akan menghapus data ?')">Hapus</a> -->
+	                                        </td>
+	                                        @endif
+	                                    </tr>
                                     @endforeach
                                     </tbody>
                                 </table>
@@ -63,8 +72,9 @@
         </div>
     </div>
 
-    <!-- Modal Create -->
-    <div class="modal fade" id="addinscopesModal" role="dialog" aria-labelledby="addinscopesModalLabel">
+	    <!-- Modal Create -->
+        @if ($canManageInsurance)
+	    <div class="modal fade" id="addinscopesModal" role="dialog" aria-labelledby="addinscopesModalLabel">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <div class="modal-header">
@@ -86,6 +96,7 @@
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
-@stop
+	        </div>
+	    </div>
+        @endif
+	@stop

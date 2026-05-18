@@ -12,6 +12,15 @@ use Exception;
 
 class InsuranceUpdateController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware(function ($request, $next) {
+            abort_unless($request->user() && $request->user()->canManageInsurance(), 403);
+
+            return $next($request);
+        });
+    }
+
     public function editUpdate($id, $insuranceId)
     {
         $insurance = InsuranceUpdate::find($id);

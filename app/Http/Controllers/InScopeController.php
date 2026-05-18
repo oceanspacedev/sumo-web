@@ -8,6 +8,21 @@ use Exception;
 
 class InScopeController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware(function ($request, $next) {
+            abort_unless($request->user() && $request->user()->canAccessInsuranceMenu(), 403);
+
+            return $next($request);
+        });
+
+        $this->middleware(function ($request, $next) {
+            abort_unless($request->user()->canManageInsurance(), 403);
+
+            return $next($request);
+        })->except(['index']);
+    }
+
     /**
      * Display a listing of the resource.
      *

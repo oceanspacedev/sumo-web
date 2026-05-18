@@ -15,7 +15,7 @@
 					<span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">{{ auth()->user()->role_id == 1 ? $notifReportAdmin : (auth()->user()->role_id == 3 ? $notifReportAdmin : $notifReportUser) }}</span>
 				</span></a></li>
 				@endif
-				@if (auth()->user()->role_id == 1 || (auth()->user()->role_id == 3 && auth()->user()->division_id == 6))
+				@if (auth()->user()->canAccessInsuranceMenu())
 				<li>
 					<a href="#subPagesInsurance" data-toggle="collapse" class="collapsed"><i class="lnr lnr-heart-pulse"></i> <span>ASURANSI</span> <i class="icon-submenu lnr lnr-chevron-left"></i></a>
 					<div id="subPagesInsurance" class="collapse ">
@@ -27,6 +27,8 @@
 						</ul>
 					</div>
 				</li>
+				@endif
+				@if (auth()->user()->role_id == 1 || (auth()->user()->role_id == 3 && auth()->user()->division_id == 6))
 				<li>
 					<a href="#subPagesRent" data-toggle="collapse" class="collapsed"><span class="icon"><i class="fa fa-handshake-o"></i>PERJANJIAN SEWA</span> <i class="icon-submenu lnr lnr-chevron-left"></i></a>
 					<div id="subPagesRent" class="collapse ">

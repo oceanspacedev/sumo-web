@@ -59,6 +59,16 @@ class User extends Authenticatable
         return $this->belongsTo(Role::class);
     }
 
+    public function canAccessInsuranceMenu()
+    {
+        return $this->canManageInsurance() || $this->id == 75;
+    }
+
+    public function canManageInsurance()
+    {
+        return $this->role_id == 1 || ($this->role_id == 3 && $this->division_id == 6);
+    }
+
     public function badan_usaha()
     {
         return $this->belongsTo(BadanUsaha::class);

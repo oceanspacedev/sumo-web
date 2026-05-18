@@ -1,6 +1,9 @@
 @extends('layouts.master')
 
 @section('content')
+    @php
+        $canManageInsurance = auth()->user()->canManageInsurance();
+    @endphp
     <div class="main">
         <div class="main-content">
             <div class="container-fluid">
@@ -51,18 +54,24 @@
                                     <h5><strong>Premi Bangunan : </strong>Rp {{ number_format($detailInsurance->building_premium, 0, ',', '.') }}</h5>
                                     <h5><strong>Catatan : </strong>{{ $detailInsurance->notes }}</h5>
                                 </div>
-                                <div class="col-md-3 text-right">
-                                    <div class="row">
-                                        <a href="/insurance/{{$detailInsurance->id}}/edit" class="btn btn-warning" data-toggle="tooltip" data-placement="bottom" title="Edit Kontrak Awal" type="button"><span class="lnr lnr-pencil"></span></a>
-                                        <a href="/insurance/{{$detailInsurance->id}}/exportUpdate" class="btn btn-primary" data-toggle="tooltip" data-placement="bottom" title="Export Asuransi"><span class="lnr lnr-download"></span></a>
-                                        <a class="btn btn-success" data-toggle="modal" data-target=".importModal" data-toggle="tooltip" data-placement="bottom" title="Import Asuransi"><span class="lnr lnr-upload"></span></a>
-                                        <a href="/insurance/export/templateUpdate" class="btn btn-default" data-toggle="tooltip" data-placement="bottom" title="Download template"><span class="lnr lnr-text-align-justify"></span></a>
-                                    </div>
-                                    <br>
-                                    <div class="row">
-                                        <a href="/insurance/createUpdate" class="btn btn-success" data-toggle="modal" data-target="#addinsuranceUpdateModal" data-toggle="tooltip" data-placement="top" title="Update Asuransi"><span class="lnr lnr-plus-circle"></span> Update</a>
-                                    </div>
-                                </div>
+	                                <div class="col-md-3 text-right">
+	                                    <div class="row">
+	                                        @if ($canManageInsurance)
+	                                        <a href="/insurance/{{$detailInsurance->id}}/edit" class="btn btn-warning" data-toggle="tooltip" data-placement="bottom" title="Edit Kontrak Awal" type="button"><span class="lnr lnr-pencil"></span></a>
+	                                        @endif
+	                                        <a href="/insurance/{{$detailInsurance->id}}/exportUpdate" class="btn btn-primary" data-toggle="tooltip" data-placement="bottom" title="Export Asuransi"><span class="lnr lnr-download"></span></a>
+	                                        @if ($canManageInsurance)
+	                                        <a class="btn btn-success" data-toggle="modal" data-target=".importModal" data-toggle="tooltip" data-placement="bottom" title="Import Asuransi"><span class="lnr lnr-upload"></span></a>
+	                                        <a href="/insurance/export/templateUpdate" class="btn btn-default" data-toggle="tooltip" data-placement="bottom" title="Download template"><span class="lnr lnr-text-align-justify"></span></a>
+	                                        @endif
+	                                    </div>
+	                                    @if ($canManageInsurance)
+	                                    <br>
+	                                    <div class="row">
+	                                        <a href="/insurance/createUpdate" class="btn btn-success" data-toggle="modal" data-target="#addinsuranceUpdateModal" data-toggle="tooltip" data-placement="top" title="Update Asuransi"><span class="lnr lnr-plus-circle"></span> Update</a>
+	                                    </div>
+	                                    @endif
+	                                </div>
                             </div>
                             <div class="col-md-12">
                                 <hr><br>
@@ -111,12 +120,14 @@
                                                 $rowStyle = 'background-color: white;';
                                             }
                                         @endphp
-                                        <tr style="{{$rowStyle}}">
-                                            <td>
-                                            <a href="/insurance/{{$detail->id}}/{{$detailInsurance->id}}/editUpdate" class="btn btn-warning btn-xs" type="button"><span class="lnr lnr-pencil"></span></a>
-                                            <!-- BUTTON DELETE -->
-                                            <!-- <a href="/insurance/{{$detail->id}}/deleteUpdate/{{$detailInsurance->id}}" class="btn btn-danger btn-xs" onclick="return confirm('Yakin akan menghapus data ?')"><span class="lnr lnr-trash"></span></a> -->
-                                            </td> 
+	                                        <tr style="{{$rowStyle}}">
+	                                            <td>
+	                                            @if ($canManageInsurance)
+	                                            <a href="/insurance/{{$detail->id}}/{{$detailInsurance->id}}/editUpdate" class="btn btn-warning btn-xs" type="button"><span class="lnr lnr-pencil"></span></a>
+	                                            @endif
+	                                            <!-- BUTTON DELETE -->
+	                                            <!-- <a href="/insurance/{{$detail->id}}/deleteUpdate/{{$detailInsurance->id}}" class="btn btn-danger btn-xs" onclick="return confirm('Yakin akan menghapus data ?')"><span class="lnr lnr-trash"></span></a> -->
+	                                            </td> 
                                             <td>{{ $loop->iteration }}</td>
                                             <td>{{ $detail->policy_number }}</td>
                                             <td>{{ $detail->stock_insurance_provider->insurance_provider ?? ''}}</td>
@@ -144,8 +155,9 @@
         </div>
     </div>
 
-    <!-- Modal Create -->
-    <div class="modal fade" id="addinsuranceUpdateModal" role="dialog" aria-labelledby="addinsuranceUpdateModalLabel">
+	    <!-- Modal Create -->
+        @if ($canManageInsurance)
+	    <div class="modal fade" id="addinsuranceUpdateModal" role="dialog" aria-labelledby="addinsuranceUpdateModalLabel">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <div class="modal-header">
@@ -250,6 +262,7 @@
                 </div>
             </form>
         </div>
-    </div>
-</div>
-@stop
+	    </div>
+	</div>
+        @endif
+	@stop

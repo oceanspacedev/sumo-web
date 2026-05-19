@@ -96,7 +96,7 @@ class ProductController extends Controller
             return $filename;
 
         } catch (Exception $e) {
-            return redirect('product')->with(['error' => $e->getMessage()]);
+            throw new Exception($e->getMessage());
         }
     }
 
@@ -211,19 +211,13 @@ class ProductController extends Controller
 
     public function import(Request $request, $disk = 'public')
     {
-        $file = $request->file('fileImport');
-        $namaFile = $file->getClientOriginalName();
+        try {
+            Excel::import(new ProductImport, $this->storeImportFile($request, $disk));
 
-        $path = 'import';
-        if (! Storage::disk($disk)->exists($path)) {
-            Storage::disk($disk)->makeDirectory($path);
+            return redirect('product')->with(['success' => 'Berhasil import data barang !']);
+        } catch (\Throwable $e) {
+            return redirect('product')->with(['error' => $e->getMessage()]);
         }
-        $file->storeAs($path, $namaFile, $disk);
-
-        $file->move(storage_path('import/'), $namaFile);
-        Excel::import(new ProductImport, storage_path('import/' . $namaFile));
-        
-        return redirect('product')->with(['success' => 'Berhasil import data barang !']);
     }
 
     public function template()

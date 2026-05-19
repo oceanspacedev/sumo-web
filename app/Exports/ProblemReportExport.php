@@ -53,7 +53,7 @@ class ProblemReportExport implements FromCollection, WithHeadings, WithMapping
         return [
             $row->user->fullname ?? '',
             $row->date,
-            $row->prcategory->problem_report_category,
+            $row->prcategory->problem_report_category ?? '',
             $row->description,
             $row->status,
             $row->scheduled_at,

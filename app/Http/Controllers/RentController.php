@@ -122,7 +122,7 @@ class RentController extends Controller
     {
         try {
             $this->validate($request, [
-                'payment_evidence_file' => 'file|image|mimes:jpeg,png,jpg,pdf',
+                'payment_evidence_file' => 'file|mimes:jpeg,png,jpg,pdf|max:10240',
             ]);
             
             if ($fieldName == 'payment_evidence_file') {
@@ -160,7 +160,7 @@ class RentController extends Controller
             return $filename;
 
         } catch (Exception $e) {
-            return redirect('rent')->with(['error' => $e->getMessage()]);
+            throw new Exception($e->getMessage());
         }
     }
 
@@ -173,7 +173,7 @@ class RentController extends Controller
     public function show($id)
     {
         $detailRent = Rent::with('rent_update')
-        ->find($id);
+            ->findOrFail($id);
 
         return view('rents.rent.show', [
             'detailRent' => $detailRent,
@@ -203,10 +203,6 @@ class RentController extends Controller
     public function update(Request $request, Rent $rent)
     {
         try {
-            if ($request->payment_evidence_file != null) {
-                $payment_evidence_file = $this->storeImage($request, 'payment_evidence_file');
-            }
-
             $payment_evidence_file = $request->payment_evidence_file == null ? null : $this->storeImage($request, 'payment_evidence_file');
 
             $request['user_id'] = Auth::id();
@@ -242,32 +238,29 @@ class RentController extends Controller
 
     public function import(Request $request, $disk = 'public')
     {
-        $file = $request->file('fileImport');
-        $namaFile = $file->getClientOriginalName();
+        try {
+            Excel::import(new RentImport, $this->storeImportFile($request, $disk));
 
-        $path = 'import';
-        if (! Storage::disk($disk)->exists($path)) {
-            Storage::disk($disk)->makeDirectory($path);
+            return redirect('rent')->with(['success' => 'Berhasil import data perjanjian sewa !']);
+        } catch (\Throwable $e) {
+            return redirect('rent')->with(['error' => $e->getMessage()]);
         }
-        $file->storeAs($path, $namaFile, $disk);
-
-        Excel::import(new RentImport, storage_path('app/public/import/' . $namaFile));
-        return redirect('rent')->with(['success' => 'Berhasil import data perjanjian sewa !']);
     }
 
     public function importUpdate(Request $request, $disk = 'public')
     {
-        $file = $request->file('fileImport');
-        $namaFile = $file->getClientOriginalName();
+        try {
+            if (! Rent::find($request->rent_id)) {
+                return redirect('rent')->with(['error' => 'Data sewa induk tidak ditemukan.']);
+            }
 
-        $path = 'import';
-        if (! Storage::disk($disk)->exists($path)) {
-            Storage::disk($disk)->makeDirectory($path);
+            Excel::import(new RentUpdateImport, $this->storeImportFile($request, $disk));
+
+            return redirect('rent/'.$request->rent_id)->with(['success' => 'Berhasil import data perjanjian sewa !']);
+        } catch (\Throwable $e) {
+            return redirect($request->rent_id ? 'rent/'.$request->rent_id : 'rent')
+                ->with(['error' => $e->getMessage()]);
         }
-        $file->storeAs($path, $namaFile, $disk);
-
-        Excel::import(new RentUpdateImport, storage_path('app/public/import/' . $namaFile));
-        return redirect('rent/'.$request->rent_id)->with(['success' => 'Berhasil import data perjanjian sewa !']);
     }
 
     public function template()
@@ -287,8 +280,10 @@ class RentController extends Controller
 
     public function exportUpdate($id)
     {
-        $rent = Rent::find($id);
+        $rent = Rent::findOrFail($id);
+        $rentCode = $rent->rent_code ?: 'rent-'.$rent->id;
+        $safeFileName = str_replace(['/', '\\'], '-', $rentCode);
 
-        return Excel::download(new RentUpdateExport($rent->id, $rent->rent_code), 'sewa_update_kode-'.$rent->rent_code.'_.xlsx');
+        return Excel::download(new RentUpdateExport($rent->id, $rentCode), 'sewa_update_kode-'.$safeFileName.'_.xlsx');
     }
 }

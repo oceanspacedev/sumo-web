@@ -22,33 +22,72 @@ class UserImport implements ToModel, WithHeadingRow
             // stop processing if username is empty
             return null;
         }
-        
-        $user = new User();
-        $user = $user->where('username', strtolower($row['username']));
-        if ($user->first()) {
-            error_log($row['fullname'] . $row['role']);
-            $badanusaha_id = BadanUsaha::where('badan_usaha', preg_replace('/\s+/', '', $row['badan_usaha']))->first()->id;
-            $divisi_id = Divisi::where('division', preg_replace('/\s+/', '', $row['divisi']))->first()->id;
+
+        $username = strtolower(trim($row['username']));
+        $user = User::where('username', $username)->first();
+
+        $badanusaha_id = $this->requiredLookupId(BadanUsaha::class, 'badan_usaha', $row['badan_usaha'] ?? null, 'Badan usaha', $username);
+        $divisi_id = $this->requiredLookupId(Divisi::class, 'division', $row['divisi'] ?? null, 'Divisi', $username);
+        $role_id = $this->requiredLookupId(Role::class, 'role', $row['role'] ?? null, 'Role', $username);
+        $approval_id = $this->approvalId($row['approval'] ?? null, $user, $username);
+
+        if (! $approval_id) {
+            throw new \InvalidArgumentException('Approval wajib diisi untuk user '.$username.'.');
+        }
+
+        if ($user) {
             $user->update([
-                'fullname' => strtoupper($row['fullname']),
-                'username' => strtolower($row['username']),
+                'fullname' => strtoupper($row['fullname'] ?? ''),
+                'username' => $username,
                 'badan_usaha_id' => $badanusaha_id,
                 'division_id' => $divisi_id,
-                'role_id' => Role::where('role', preg_replace('/\s+/', '', $row['role']))->first()->id,
-                'approval_id' => User::where('fullname', $row['approval'])->first()->id,
+                'role_id' => $role_id,
+                'approval_id' => $approval_id,
             ]);
         } else {
-            $divisi_id = Divisi::where('division', preg_replace('/\s+/', '', $row['divisi']))->first()->id;
-            error_log($row['username'] . $row['divisi']);
             return new User([
-                'username' => strtolower($row['username']),
-                'fullname' => strtoupper($row['fullname']),
-                'password' => $row['password'] ? bcrypt($row['password']) : bcrypt('complete123'),
-                'badan_usaha_id' => BadanUsaha::where('badan_usaha', preg_replace('/\s+/', '', $row['badan_usaha']))->first()->id,
+                'username' => $username,
+                'fullname' => strtoupper($row['fullname'] ?? ''),
+                'password' => ($row['password'] ?? null) ? bcrypt($row['password']) : bcrypt('complete123'),
+                'badan_usaha_id' => $badanusaha_id,
                 'division_id' => $divisi_id,
-                'role_id' => Role::where('role', preg_replace('/\s+/', '', $row['role']))->first()->id,
-                'approval_id' => User::where('fullname', $row['approval'])->first()->id,
+                'role_id' => $role_id,
+                'approval_id' => $approval_id,
             ]);
         }
+    }
+
+    private function requiredLookupId(string $model, string $column, ?string $value, string $label, string $username): int
+    {
+        $normalized = preg_replace('/\s+/', '', trim((string) $value));
+
+        if ($normalized === '') {
+            throw new \InvalidArgumentException($label.' wajib diisi untuk user '.$username.'.');
+        }
+
+        $id = $model::where($column, $normalized)->value('id');
+
+        if (! $id) {
+            throw new \InvalidArgumentException($label.' "'.$value.'" tidak ditemukan untuk user '.$username.'.');
+        }
+
+        return $id;
+    }
+
+    private function approvalId(?string $value, ?User $existingUser, string $username): ?int
+    {
+        $approvalName = trim((string) $value);
+
+        if ($approvalName === '') {
+            return $existingUser ? $existingUser->approval_id : null;
+        }
+
+        $id = User::where('fullname', $approvalName)->value('id');
+
+        if (! $id) {
+            throw new \InvalidArgumentException('Approval "'.$value.'" tidak ditemukan untuk user '.$username.'.');
+        }
+
+        return $id;
     }
 }

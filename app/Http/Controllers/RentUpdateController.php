@@ -44,7 +44,7 @@ class RentUpdateController extends Controller
     {
         try {
             $this->validate($request, [
-                'payment_evidence_file' => 'file|image|mimes:jpeg,png,jpg,pdf',
+                'payment_evidence_file' => 'file|mimes:jpeg,png,jpg,pdf|max:10240',
             ]);
             
             if ($fieldName == 'payment_evidence_file') {
@@ -82,14 +82,14 @@ class RentUpdateController extends Controller
             return $filename;
 
         } catch (Exception $e) {
-            return redirect('rent/'.$request->rent_id)->with(['error' => $e->getMessage()]);
+            throw new Exception($e->getMessage());
         }
     }
 
     public function editUpdate($id, $rentId)
     {
-        $rent = RentUpdate::find($id);
-        $rentId = Rent::find($rentId);
+        $rent = RentUpdate::findOrFail($id);
+        $rentId = Rent::findOrFail($rentId);
 
         return view('rents.rent.showEditUpdate', [
             'rent' => $rent,
@@ -100,10 +100,6 @@ class RentUpdateController extends Controller
     public function updateRentUpdate(Request $request, RentUpdate $rentUpdate)
     {
         try {
-            if ($request->payment_evidence_file != null) {
-                $payment_evidence_file = $this->storeImage($request, 'payment_evidence_file');
-            }
-
             $payment_evidence_file = $request->payment_evidence_file == null ? null : $this->storeImage($request, 'payment_evidence_file');
             
             $request['user_id'] = Auth::id();

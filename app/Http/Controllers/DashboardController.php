@@ -196,7 +196,7 @@ class DashboardController extends Controller
                 $highestRequestCostUnit = ['0', '0' ,'0'];
             }
 
-            $request_type_filter = RequestType::where('id', $request->request_type)->first()->request_type ?? '';
+            $request_type_filter = RequestType::where('id', $request->request_type)->value('request_type') ?? '';
 
             //HIGHEST PROBLEM REPORT COUNT CHART
             $highestProblemTotalUser = [];
@@ -212,7 +212,7 @@ class DashboardController extends Controller
                 $highestProblemTotalUnit = ['0', '0' ,'0'];
             }
 
-            $pr_category_filter = PRCategory::where('id', $request->pr_category_id)->first()->problem_report_category ?? '';
+            $pr_category_filter = PRCategory::where('id', $request->pr_category_id)->value('problem_report_category') ?? '';
 
             //HIGHEST PROBLEM REPORT CATEGORY CHART
             $highestProblemCategoryUser = [];

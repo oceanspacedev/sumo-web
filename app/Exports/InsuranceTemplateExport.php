@@ -9,6 +9,7 @@ class InsuranceTemplateExport implements WithHeadings
     public function headings(): array
     {
         return [
+            'id',
             'no_polis',
             'alamat_tertanggung',
             'nama_tertanggung',

@@ -14,7 +14,7 @@ class UserExport implements FromCollection, WithHeadings, WithMapping
     */
     public function collection()
     {
-        return User::with(['role','division','badan_usaha'])->orderBy('fullname')->get();
+        return User::with(['role','division','badan_usaha','approval'])->orderBy('fullname')->get();
     }
 
     public function headings(): array
@@ -34,10 +34,10 @@ class UserExport implements FromCollection, WithHeadings, WithMapping
         return [
             $user->username,
             $user->fullname,
-            $user->badan_usaha->badan_usaha,
-            $user->division->division,
-            $user->role->role,
-            $user->approval->fullname,
+            $user->badan_usaha->badan_usaha ?? '',
+            $user->division->division ?? '',
+            $user->role->role ?? '',
+            $user->approval->fullname ?? '',
         ];
     }
 }

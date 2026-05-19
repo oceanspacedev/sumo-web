@@ -1,6 +1,16 @@
 @extends('layouts.master')
 
 @section('content')
+    @php
+        $authUser = auth()->user();
+        $authRoleId = $authUser->role_id ?? 0;
+        $authDivisionId = $authUser->division_id ?? null;
+        $authAreaId = optional(optional($authUser)->division)->area_id;
+        $requestUser = $requestBarang->user;
+        $requestUserAreaId = optional(optional($requestUser)->division)->area_id;
+        $canSeeApprovalColumns = $authRoleId < 4 || in_array($authAreaId, [3, 4, 5, 11]);
+        $canEditRequest = $authRoleId == 3 && in_array($authDivisionId, [9, 12, 80]);
+    @endphp
     <div class="main">
         <div class="main-content">
             <div class="container-fluid">
@@ -30,7 +40,7 @@
                                 </nav>
                             </div>
                             <div class="col-md-12" style="margin-bottom: 20px;">
-                                <h3 class="panel-title">Detail Pengajuan - {{ $requestBarang->user->fullname }}</h3>
+                                <h3 class="panel-title">Detail Pengajuan - {{ optional($requestUser)->fullname ?? '-' }}</h3>
                             </div>
 						</div>
 						<div class="panel-body table-responsive">
@@ -42,33 +52,37 @@
                                         <th>Barang</th>
                                         <th>Harga</th>
                                         <th>Keterangan</th>
-                                        <th>@if ( auth()->user()->role_id < 4 || in_array(auth()->user()->division->area_id, [3, 4, 5, 11])) Sisa @endif</th>
+                                        <th>@if ($canSeeApprovalColumns) Sisa @endif</th>
                                         <th>Request</th>
-                                        <th>@if ((auth()->user()->role_id < 4) || in_array(auth()->user()->division->area_id, [3, 4, 5, 11])) Jml disetujui @endif</th>
-                                        <th>@if ((auth()->user()->role_id < 4) || in_array(auth()->user()->division->area_id, [3, 4, 5, 11])) Total @endif</th>
-                                        <th>@if (auth()->user()->role_id == 3 && auth()->user()->division_id == 9) Revisi @endif</th>
+                                        <th>@if ($canSeeApprovalColumns) Jml disetujui @endif</th>
+                                        <th>@if ($canSeeApprovalColumns) Total @endif</th>
+                                        <th>@if ($canEditRequest) Revisi @endif</th>
                                     </tr>
                                     </thead>
                                     <tbody>
                                     @foreach ($requestBarang->request_detail as $detail)
+                                        @php
+                                            $product = $detail->product;
+                                            $price = $product->price ?? 0;
+                                            $rowQty = $detail->qty_approved === null ? $detail->qty_request : $detail->qty_approved;
+                                            $rowTotal = in_array($requestUserAreaId, [4, 5, 11])
+                                                ? $rowQty * $price
+                                                : $detail->qty_request * $price;
+                                        @endphp
                                         <tr>
                                             <td>{{ $loop->iteration }}</td>
-                                            <td>{{ $detail->product->product }}</td>
-                                            <td>Rp {{ number_format($detail->product->price, 0, ',', '.') }}</td>
+                                            <td>{{ optional($product)->product ?? '-' }}</td>
+                                            <td>Rp {{ number_format($price, 0, ',', '.') }}</td>
                                             <td>{{ $detail->description }}</td>
-                                            <td>@if ((auth()->user()->role_id < 4) || in_array(auth()->user()->division->area_id, [3, 4, 5, 11])){{ $detail->qty_remaining }} @endif</td>
+                                            <td>@if ($canSeeApprovalColumns){{ $detail->qty_remaining }} @endif</td>
                                             <td>{{ $detail->qty_request }}</td>
-                                            <td>@if ((auth()->user()->role_id < 4) || in_array(auth()->user()->division->area_id, [3, 4, 5, 11])) {{ $detail->qty_approved }} @endif</td>
-                                            <td>@if ((auth()->user()->role_id < 4) || in_array(auth()->user()->division->area_id, [3, 4, 5, 11])) 
-                                                    @if (in_array($requestBarang->user->division->area_id, [4, 5, 11]))
-                                                        Rp {{ $detail->qty_approved === null ? number_format($detail->qty_request * $detail->product->price, 0, ',', '.') : ($detail->qty_approved === 0 ? number_format($detail->qty_approved * $detail->product->price, 0, ',', '.') : number_format($detail->qty_approved * $detail->product->price, 0, ',', '.')) }}
-                                                    @else 
-                                                        Rp {{ number_format($detail->qty_request * $detail->product->price, 0, ',', '.') }}
-                                                    @endif
+                                            <td>@if ($canSeeApprovalColumns) {{ $detail->qty_approved }} @endif</td>
+                                            <td>@if ($canSeeApprovalColumns)
+                                                    Rp {{ number_format($rowTotal, 0, ',', '.') }}
                                                 @endif
                                             </td>
                                             <td>
-                                            @if (auth()->user()->role_id == 3 && in_array(auth()->user()->division_id, [9, 12, 80]))
+                                            @if ($canEditRequest)
                                             <a href="/editRequest/{{$detail->id}}/{{$requestBarang->id}}" class="btn btn-warning" type="button"><span class="lnr lnr-pencil"></span></a>
                                             @endif   
                                             <a href="#" data-toggle="modal" data-target="#qrModal{{$detail->id}}" class="btn btn-default btn-xs" data-toggle="tooltip" data-placement="top" title="Create QR Code"><i class="fa fa-qrcode"></i></a>
@@ -93,9 +107,9 @@
                                                                 <div class="col-md-12 text-center">
                                                                     <div style="display: inline-block; margin-bottom: 50px;">{!! DNS2D::getBarcodeHTML(strval($detail->id), 'QRCODE') !!}</div>
                                                                     <br><br>
-                                                                    <div style="display: inline-block;"><p style="color: black;">{{ $detail->product->product }}</p></div>
+                                                                    <div style="display: inline-block;"><p style="color: black;">{{ optional($product)->product ?? '-' }}</p></div>
                                                                     <br>
-                                                                    <div style="display: inline-block;"><p style="color: black;">Harga: {{ $detail->product->price }}</p></div>
+                                                                    <div style="display: inline-block;"><p style="color: black;">Harga: {{ $price }}</p></div>
                                                                     <br>
                                                                     <div style="display: inline-block;">{!! DNS1D::getBarcodeHTML(strval($detail->id), 'C39') !!}</div>
                                                                     <br>
@@ -119,14 +133,14 @@
                                     <h4>Total Biaya : Rp {{ number_format($grandTotal, 0, ',', '.') }}</h4>
                                 </div>
                             </div>
-                            <div class="text-right">
-                                <form action="/fixRequest/{{$requestBarang->id}}" method="POST" style="display: inline-block;">
-                                    {{csrf_field()}}
-                                    @if (auth()->user()->role_id == 3 && in_array(auth()->user()->division_id, [9, 12, 80]))
+                                <div class="text-right">
+                                    <form action="/fixRequest/{{$requestBarang->id}}" method="POST" style="display: inline-block;">
+                                        {{csrf_field()}}
+                                    @if ($canEditRequest)
                                     <button type="submit" class="btn btn-info" onclick="return confirm('Pengajuan ini tanpa revisi, apakah semua sudah disetujui ?')">SELESAI</button>
                                     @endif
                                 </form>
-                                @if (auth()->user()->role_id == 3 && auth()->user()->division_id == 12)
+                                @if ($authRoleId == 3 && $authDivisionId == 12)
                                 <a href="/request/{{$requestBarang->id}}/editAuditNotes" class="btn btn-warning">EDIT CATATAN AUDIT</a>
                                 @endif
                             </div>

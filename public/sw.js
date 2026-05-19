@@ -1,5 +1,8 @@
+const cacheName = "offline-v2";
+const offlineUrl = "/offline.html";
+
 const preLoad = function () {
-    return caches.open("offline").then(function (cache) {
+    return caches.open(cacheName).then(function (cache) {
         // caching index and important routes
         return cache.addAll(filesToCache);
     });
@@ -7,50 +10,52 @@ const preLoad = function () {
 
 self.addEventListener("install", function (event) {
     event.waitUntil(preLoad());
+    self.skipWaiting();
 });
 
 const filesToCache = [
     '/',
-    '/offline.html'
+    offlineUrl
 ];
 
-const checkResponse = function (request) {
-    return new Promise(function (fulfill, reject) {
-        fetch(request).then(function (response) {
-            if (response.status !== 404) {
-                fulfill(response);
-            } else {
-                reject();
-            }
-        }, reject);
-    });
-};
-
-const addToCache = function (request) {
-    return caches.open("offline").then(function (cache) {
-        return fetch(request).then(function (response) {
-            return cache.put(request, response);
-        });
-    });
-};
-
 const returnFromCache = function (request) {
-    return caches.open("offline").then(function (cache) {
+    return caches.open(cacheName).then(function (cache) {
         return cache.match(request).then(function (matching) {
-            if (!matching || matching.status === 404) {
-                return cache.match("offline.html");
-            } else {
+            if (matching) {
                 return matching;
             }
+
+            if (request.mode === "navigate") {
+                return cache.match(offlineUrl);
+            }
+
+            return Response.error();
         });
     });
 };
 
+self.addEventListener("activate", function (event) {
+    event.waitUntil(
+        caches.keys().then(function (keys) {
+            return Promise.all(keys.map(function (key) {
+                if (key === "offline" || (key.startsWith("offline-") && key !== cacheName)) {
+                    return caches.delete(key);
+                }
+            }));
+        }).then(function () {
+            return self.clients.claim();
+        })
+    );
+});
+
 self.addEventListener("fetch", function (event) {
-    event.respondWith(checkResponse(event.request).catch(function () {
-        return returnFromCache(event.request);
-    }));
-    if(!event.request.url.startsWith('http')){
-        event.waitUntil(addToCache(event.request));
+    if (event.request.method !== "GET") {
+        return;
     }
+
+    event.respondWith(
+        fetch(event.request).catch(function () {
+            return returnFromCache(event.request);
+        })
+    );
 });

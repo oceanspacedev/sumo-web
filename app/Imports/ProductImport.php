@@ -17,31 +17,51 @@ class ProductImport implements ToModel, WithHeadingRow
     */
     public function model(array $row)
     {
-        $product = new Product();
-        $product = $product->where('product', strtolower($row['nama_barang']));
-        if ($product->first()) {
-            $category_id = Category::where('category', preg_replace('/\s+/', '', $row['kategori']))->first()->id;
-            $unit_type_id = UnitType::where('unit_type', preg_replace('/\s+/', '', $row['tipe_unit']))->first()->id;
+        if (empty($row['nama_barang'])) {
+            return null;
+        }
+
+        $productName = strtoupper($row['nama_barang']);
+        $category_id = $this->requiredLookupId(Category::class, 'category', $row['kategori'] ?? null, 'Kategori', $productName);
+        $unit_type_id = $this->requiredLookupId(UnitType::class, 'unit_type', $row['tipe_unit'] ?? null, 'Tipe unit', $productName);
+
+        $product = Product::where('product', strtolower($row['nama_barang']))->first();
+
+        if ($product) {
             $product->update([
-                'product' => strtoupper($row['nama_barang']),
+                'product' => $productName,
                 'category_id' => $category_id,
                 'unit_type_id' => $unit_type_id,
-                'price' => $row['harga'] ?? $product->first()->price,
-                'description' => $row['keterangan'] ?? $product->first()->description,
-                'stock' => $row['stok'] ?? $product->first()->stock,
+                'price' => $row['harga'] ?? $product->price,
+                'description' => $row['keterangan'] ?? $product->description,
+                'stock' => $row['stok'] ?? $product->stock,
             ]);
         } else {
-            $category_id = Category::where('category', preg_replace('/\s+/', '', $row['kategori']))->first()->id;
-            $unit_type_id = UnitType::where('unit_type', preg_replace('/\s+/', '', $row['tipe_unit']))->first()->id;
-            //dd($unit_type_id);
             return new Product([
-                'product' => strtoupper($row['nama_barang']),
+                'product' => $productName,
                 'category_id' => $category_id,
                 'unit_type_id' => $unit_type_id,
-                'price' => $row['harga'],
-                'description' => $row['keterangan'],
-                'stock' => $row['stok'],
+                'price' => $row['harga'] ?? null,
+                'description' => $row['keterangan'] ?? null,
+                'stock' => $row['stok'] ?? null,
             ]);
         }
+    }
+
+    private function requiredLookupId(string $model, string $column, ?string $value, string $label, string $productName): int
+    {
+        $normalized = preg_replace('/\s+/', '', trim((string) $value));
+
+        if ($normalized === '') {
+            throw new \InvalidArgumentException($label.' wajib diisi untuk barang '.$productName.'.');
+        }
+
+        $id = $model::where($column, $normalized)->value('id');
+
+        if (! $id) {
+            throw new \InvalidArgumentException($label.' "'.$value.'" tidak ditemukan untuk barang '.$productName.'.');
+        }
+
+        return $id;
     }
 }

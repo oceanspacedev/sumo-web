@@ -148,8 +148,12 @@ class InsuranceController extends Controller
      */
     public function show($id)
     {
-        $detailInsurance = Insurance::with('insurance_update')
-        ->find($id);
+        $detailInsurance = Insurance::with([
+            'stock_insurance_provider',
+            'building_insurance_provider',
+            'insurance_update.stock_insurance_provider',
+            'insurance_update.building_insurance_provider',
+        ])->findOrFail($id);
 
         return view('insurances.insurance.show', [
             'detailInsurance' => $detailInsurance,
@@ -232,33 +236,31 @@ class InsuranceController extends Controller
 
     public function import(Request $request, $disk = 'public')
     {
-        $file = $request->file('fileImport');
-        $namaFile = $file->getClientOriginalName();
+        try {
+            Excel::import(new InsuranceImport, $this->storeImportFile($request, $disk));
 
-        $path = 'import';
-        if (! Storage::disk($disk)->exists($path)) {
-            Storage::disk($disk)->makeDirectory($path);
+            return redirect('insurance')->with(['success' => 'Berhasil import data asuransi !']);
+        } catch (\Throwable $e) {
+            return redirect('insurance')->with(['error' => $e->getMessage()]);
         }
-        $file->storeAs($path, $namaFile, $disk);
-
-        //$file->move(storage_path('import/'), $namaFile); not necessary
-        Excel::import(new InsuranceImport, storage_path('app/public/import/' . $namaFile));
-        return redirect('insurance')->with(['success' => 'Berhasil import data asuransi !']);
     }
 
     public function importUpdate(Request $request, $disk = 'public')
     {
-        $file = $request->file('fileImport');
-        $namaFile = $file->getClientOriginalName();
+        try {
+            $insurance = Insurance::find($request->insurance_id);
 
-        $path = 'import';
-        if (! Storage::disk($disk)->exists($path)) {
-            Storage::disk($disk)->makeDirectory($path);
+            if (! $insurance) {
+                return redirect('insurance')->with(['error' => 'Data asuransi induk tidak ditemukan.']);
+            }
+
+            Excel::import(new InsuranceUpdateImport($insurance), $this->storeImportFile($request, $disk));
+
+            return redirect('insurance/'.$request->insurance_id)->with(['success' => 'Berhasil import data asuransi !']);
+        } catch (\Throwable $e) {
+            return redirect($request->insurance_id ? 'insurance/'.$request->insurance_id : 'insurance')
+                ->with(['error' => $e->getMessage()]);
         }
-        $file->storeAs($path, $namaFile, $disk);
-
-        Excel::import(new InsuranceUpdateImport, storage_path('app/public/import/' . $namaFile));
-        return redirect('insurance/'.$request->insurance_id)->with(['success' => 'Berhasil import data asuransi !']);
     }
 
     public function template()
@@ -278,10 +280,10 @@ class InsuranceController extends Controller
 
     public function exportUpdate($id)
     {
-        $polis = Insurance::find($id);
-        
-        $safeFileName = str_replace(['/', '\\'], '-', $polis->policy_number);
+        $polis = Insurance::findOrFail($id);
+        $policyNumber = $polis->policy_number ?: 'polis-'.$polis->id;
+        $safeFileName = str_replace(['/', '\\'], '-', $policyNumber);
 
-        return Excel::download(new InsuranceUpdateExport($polis->id, $polis->policy_number), 'asuransi_update_nopol-'.$safeFileName.'_.xlsx');
+        return Excel::download(new InsuranceUpdateExport($polis->id, $policyNumber), 'asuransi_update_nopol-'.$safeFileName.'_.xlsx');
     }
 }

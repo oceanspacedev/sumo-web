@@ -114,7 +114,7 @@ class RequestExport implements FromArray, WithHeadings, WithMapping
 
             array_push($result, [
                 'product_name' => $product->product,
-                'unit_type' => $product->unit_type->unit_type,
+                'unit_type' => $product->unit_type->unit_type ?? '',
                 'price' => $product->price,
                 'qty' => $qty,
                 'total_item' => $totalProductPerProduct,

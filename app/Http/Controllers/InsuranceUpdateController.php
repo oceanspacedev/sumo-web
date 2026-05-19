@@ -23,8 +23,8 @@ class InsuranceUpdateController extends Controller
 
     public function editUpdate($id, $insuranceId)
     {
-        $insurance = InsuranceUpdate::find($id);
-        $insuranceId = Insurance::find($insuranceId);
+        $insurance = InsuranceUpdate::findOrFail($id);
+        $insuranceId = Insurance::findOrFail($insuranceId);
 
 
         return view('insurances.insurance.showEditUpdate', [

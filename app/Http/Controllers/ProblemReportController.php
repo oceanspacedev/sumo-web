@@ -227,8 +227,8 @@ class ProblemReportController extends Controller
     {
         try {
             $this->validate($request, [
-                'photo_before' => 'file|image|mimes:jpeg,png,jpg,pdf',
-                'photo_after' => 'file|image|mimes:jpeg,png,jpg,pdf',
+                'photo_before' => 'file|mimes:jpeg,png,jpg,pdf|max:10240',
+                'photo_after' => 'file|mimes:jpeg,png,jpg,pdf|max:10240',
             ]);
             
             if ($fieldName == 'photo_before') {
@@ -266,7 +266,7 @@ class ProblemReportController extends Controller
             return $filename;
 
         } catch (Exception $e) {
-            return redirect('problemReport')->with(['error' => $e->getMessage()]);
+            throw new Exception($e->getMessage());
         }
     }
 
@@ -340,17 +340,12 @@ class ProblemReportController extends Controller
     }
 
     public function export(Request $request){
-        if ($request->exportProblemReport) {
-            $data = explode('-', preg_replace('/\s+/', '', $request->exportProblemReport));
-            $date1 = Carbon::parse($data[0])->format('Y-m-d');
-            $date2 = Carbon::parse($data[1])->format('Y-m-d');
-            $date2 = date('Y-m-d', strtotime('+ 1 day', strtotime($date2)));
-            $problems = ProblemReport::with('prcategory','user','closedby')
-                ->whereBetween('date', [$date1, $date2])
-                ->orderBy('date')
-                ->get();
-        }
+        try {
+            [$date1, $date2] = $this->parseExportDateRange($request->exportProblemReport);
 
-        return Excel::download(new ProblemReportExport($date1, $date2), 'laporan_gangguan_' . $date1 . '_to_' . $date2 . '.xlsx',);
+            return Excel::download(new ProblemReportExport($date1, $date2), 'laporan_gangguan_' . $date1 . '_to_' . $date2 . '.xlsx');
+        } catch (\Throwable $e) {
+            return redirect('problemReport')->with(['error' => $e->getMessage()]);
+        }
     }
 }

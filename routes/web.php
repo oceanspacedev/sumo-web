@@ -78,7 +78,7 @@ Route::post('search-product', [AuthController::class, 'searchProduct']);
     Route::get('/insurance/export/template',[InsuranceController::class,'template']);
 
     ##INSURANCE UPDATE
-    Route::get('/insurance/{id}/exportUpdate',[InsuranceController::class,'exportUpdate']);
+    Route::get('/insurance/{id}/exportUpdate',[InsuranceController::class,'exportUpdate'])->where('id', '[0-9]+');
     Route::get('/insurance/export/templateUpdate',[InsuranceController::class,'templateUpdate']);
 
     ##RENT
@@ -86,7 +86,7 @@ Route::post('search-product', [AuthController::class, 'searchProduct']);
     Route::get('/rent/export/template',[RentController::class,'template']);
 
     ##RENT UPDATE
-    Route::get('/rent/{id}/exportUpdate',[RentController::class,'exportUpdate']);
+    Route::get('/rent/{id}/exportUpdate',[RentController::class,'exportUpdate'])->where('id', '[0-9]+');
     Route::get('/rent/export/templateUpdate',[RentController::class,'templateUpdate']);
 
 #IMPORT
@@ -187,7 +187,7 @@ Route::group(['middleware' => ['auth', 'checkRole:1,3']], function(){
     Route::get('/insurance/{insurance}/edit', [InsuranceController::class, 'edit']);
     Route::post('/insurance/{insurance}/update', [InsuranceController::class, 'update']);
     Route::get('/insurance/{insurance}/delete', [InsuranceController::class, 'destroy']);
-    Route::get('/insurance/{id}', [InsuranceController::class, 'show']);
+    Route::get('/insurance/{id}', [InsuranceController::class, 'show'])->where('id', '[0-9]+');
     Route::post('/insurance/storeUpdate', [InsuranceController::class, 'storeUpdate']);
 
     #INSURANCE UPDATE
@@ -223,7 +223,7 @@ Route::group(['middleware' => ['auth', 'checkRole:1,3']], function(){
     Route::get('/rent/{rent}/edit', [RentController::class, 'edit']);
     Route::post('/rent/{rent}/update', [RentController::class, 'update']);
     Route::get('/rent/{rent}/delete', [RentController::class, 'destroy']);
-    Route::get('/rent/{id}', [RentController::class, 'show']);
+    Route::get('/rent/{id}', [RentController::class, 'show'])->where('id', '[0-9]+');
 
     #RENT UPDATE
     Route::post('/rent/storeUpdate', [RentUpdateController::class, 'storeUpdate']);
@@ -275,4 +275,3 @@ Route::group(['middleware' => ['auth', 'checkRole:1,2,3,4']], function(){
     Route::get('/request/{requestBarang}/delete', [RequestController::class, 'destroy']);
     Route::get('/request-logs', [RequestController::class, 'requestLogs']);
 });
-

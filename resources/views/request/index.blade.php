@@ -102,19 +102,24 @@
                                     </thead>
                                     <tbody>
                                     @foreach ($requestBarangs as $reqbar)
+                                    @php
+                                        $requestUser = $reqbar->user;
+                                        $requestUserAreaId = optional(optional($requestUser)->division)->area_id;
+                                        $requestTypeId = optional($reqbar->request_type)->id;
+                                    @endphp
                                     <tr>
                                         <!-- NO -->
                                         <td>{{ $loop->iteration }}</td>
                                         <!-- KODE -->
                                         <!-- <td>{{ $reqbar->request_code }}</td> -->
                                         <!-- PEMOHON -->
-                                        <td>{{ $reqbar->user->fullname }}</td>
+                                        <td>{{ optional($requestUser)->fullname ?? '-' }}</td>
                                         <!-- DIVISI -->
                                         <!-- <td>{{ $reqbar->user->division->division }}</td> -->
                                         <!-- DIAJUKAN PADA -->
                                         <td>{{ Carbon\Carbon::parse($reqbar->date)->format('d M Y H:i') }}</td>
                                         <!-- TIPE PENGAJUAN -->
-                                        <td>{{ $reqbar->request_type->request_type }}</td>
+                                        <td>{{ optional($reqbar->request_type)->request_type ?? '-' }}</td>
                                         <!-- <td>{{ $reqbar->request_detail }}</td> -->
                                         <!-- LAMPIRAN -->
                                         @if (Storage::exists('public/Request_File/' . $reqbar->request_file) && Storage::size('public/Request_File/' . $reqbar->request_file) > 0)
@@ -138,10 +143,10 @@
                                         @endforeach
                                         <!-- DISETUJUI OLEH -->
                                         <td>
-                                        @if($reqbar->request_type->id == 2 || $reqbar->request_type->id == 3)
+                                        @if(in_array($requestTypeId, [2, 3]))
                                             @foreach($reqbar->request_approval as $approval)
                                                 @if ($approval->approval_type == 'MANAGER')
-                                                    {{$approval->approved_by != null ? $approval->user->fullname : "-" }}
+                                                    {{$approval->approved_by != null ? (optional($approval->user)->fullname ?? "-") : "-" }}
                                                 @endif
                                             @endforeach
                                         @else
@@ -150,7 +155,7 @@
                                         </td>
                                         <!-- DISETUJUI PADA -->
                                         <td>
-                                        @if($reqbar->request_type->id == 2 || $reqbar->request_type->id == 3)
+                                        @if(in_array($requestTypeId, [2, 3]))
                                             @foreach($reqbar->request_approval as $approval)
                                                 @if ($approval->approval_type == 'MANAGER')
                                                     {{$approval->approved_by != null ? Carbon\Carbon::parse($approval->approved_at)->format('d M Y H:i') : "-" }}
@@ -164,7 +169,7 @@
                                         <td>
                                             @foreach($reqbar->request_approval as $approval)
                                                 @if ($approval->approval_type == 'EXECUTOR')
-                                                    {{$approval->approved_by != null ? $approval->user->fullname : "-" }}
+                                                    {{$approval->approved_by != null ? (optional($approval->user)->fullname ?? "-") : "-" }}
                                                 @endif
                                             @endforeach
                                         </td>
@@ -214,9 +219,9 @@
                                                             @if ($reqbar->status_client == 3)
                                                                 <a href="/request/{{$reqbar->id}}/editStatus" class="btn btn-warning btn-xs" data-toggle="modal" type="button"><span class="lnr lnr-pencil"></span></a>
                                                             @else
-                                                                @if ($reqbar->request_approval->where('approval_type', 'EXECUTOR')->whereNull('approved_by')->isNotEmpty() && $reqbar->request_type_id == 2 && !in_array($reqbar->user->division->area_id, [4, 5, 6, 11]))
+                                                                @if ($reqbar->request_approval->where('approval_type', 'EXECUTOR')->whereNull('approved_by')->isNotEmpty() && $reqbar->request_type_id == 2 && $requestUserAreaId !== null && !in_array($requestUserAreaId, [4, 5, 6, 11]))
                                                                     <a href="/request/{{$reqbar->id}}/editStatus" class="btn btn-warning btn-xs" data-toggle="modal" type="button"><span class="lnr lnr-pencil"></span></a>
-                                                                @elseif ($reqbar->request_approval->where('approval_type', 'EXECUTOR')->whereNull('approved_by')->isNotEmpty() && $reqbar->request_type_id == 2 && in_array($reqbar->user->division->area_id, [4, 5, 6, 11]) && $reqbar->request_approval->where('approval_type', 'MANAGER')->whereNotNull('approved_by')->isNotEmpty())
+                                                                @elseif ($reqbar->request_approval->where('approval_type', 'EXECUTOR')->whereNull('approved_by')->isNotEmpty() && $reqbar->request_type_id == 2 && $requestUserAreaId !== null && in_array($requestUserAreaId, [4, 5, 6, 11]) && $reqbar->request_approval->where('approval_type', 'MANAGER')->whereNotNull('approved_by')->isNotEmpty())
                                                                     <a href="/request/{{$reqbar->id}}/editStatus" class="btn btn-warning btn-xs" data-toggle="modal" type="button"><span class="lnr lnr-pencil"></span></a>
                                                                 @elseif ($reqbar->request_approval->where('approval_type', 'EXECUTOR')->whereNull('approved_by')->isNotEmpty() && $reqbar->request_type_id == 3)
                                                                     @if ($reqbar->request_approval->where('approval_type', 'MANAGER')->whereNotNull('approved_by')->isNotEmpty())

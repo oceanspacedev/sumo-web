@@ -68,7 +68,7 @@
 	                                    @if ($canManageInsurance)
 	                                    <br>
 	                                    <div class="row">
-	                                        <a href="/insurance/createUpdate" class="btn btn-success" data-toggle="modal" data-target="#addinsuranceUpdateModal" data-toggle="tooltip" data-placement="top" title="Update Asuransi"><span class="lnr lnr-plus-circle"></span> Update</a>
+                                        <button type="button" class="btn btn-success" data-toggle="modal" data-target="#addinsuranceUpdateModal" title="Update Asuransi"><span class="lnr lnr-plus-circle"></span> Update</button>
 	                                    </div>
 	                                    @endif
 	                                </div>

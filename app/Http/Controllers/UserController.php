@@ -173,7 +173,7 @@ class UserController extends Controller
 
             return redirect('user')->with('success', 'Data berhasil diupdate !');
         } catch (Exception $e) {
-             throw new Exception($e->getMessage());
+            return redirect('user')->with(['error' => $e->getMessage()]);
         }
     }
 
@@ -196,7 +196,7 @@ class UserController extends Controller
 
     public function active(Request $request, $id)
     {
-        $user = User::onlyTrashed()->find($id);
+        $user = User::onlyTrashed()->findOrFail($id);
         $user->deleted_at = null;
         $user->save();
         return redirect('user')->with(['success' => "Berhasil mengatifkan kembali user " . $user->fullname]);
@@ -209,18 +209,13 @@ class UserController extends Controller
 
     public function import(Request $request, $disk = 'public')
     {
-        $file = $request->file('fileImport');
-        $namaFile = $file->getClientOriginalName();
+        try {
+            Excel::import(new UserImport, $this->storeImportFile($request, $disk));
 
-        $path = 'import';
-        if (! Storage::disk($disk)->exists($path)) {
-            Storage::disk($disk)->makeDirectory($path);
+            return redirect('user')->with(['success' => 'Berhasil import user']);
+        } catch (\Throwable $e) {
+            return redirect('user')->with(['error' => $e->getMessage()]);
         }
-        $file->storeAs($path, $namaFile, $disk);
-
-        //$file->move(storage_path('import/'), $namaFile);
-        Excel::import(new UserImport, storage_path('import/' . $namaFile));
-        return redirect('user')->with(['success' => 'Berhasil import user']);
     }
 
     public function template()

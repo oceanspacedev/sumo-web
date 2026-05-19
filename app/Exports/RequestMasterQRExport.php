@@ -52,8 +52,8 @@ class RequestMasterQRExport implements FromCollection, WithHeadings, WithMapping
         foreach ($reqbar->request_detail as $detail) {
             $data[] = [
                 $detail->id,
-                $detail->product->product,
-                $reqbar->user->fullname,
+                $detail->product->product ?? '',
+                $reqbar->user->fullname ?? '',
             ];
         }
 

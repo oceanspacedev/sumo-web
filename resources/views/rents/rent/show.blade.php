@@ -84,7 +84,7 @@
                                     </div>
                                     <br>
                                     <div class="row">
-                                        <a href="/rent/createUpdate" class="btn btn-success" data-toggle="modal" data-target="#addRentUpdateModal" data-toggle="tooltip" data-placement="top" title="Update Perjanjian Sewa"><span class="lnr lnr-plus-circle"></span> Update</a>
+                                        <button type="button" class="btn btn-success" data-toggle="modal" data-target="#addRentUpdateModal" title="Update Perjanjian Sewa"><span class="lnr lnr-plus-circle"></span> Update</button>
                                     </div>
                                 </div>
                             </div>

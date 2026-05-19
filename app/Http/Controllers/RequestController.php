@@ -326,17 +326,24 @@ class RequestController extends Controller
 
     public function show($id)
     {
-        $requestBarang = RequestBarang::with('request_detail.product')->find($id);
+        $requestBarang = RequestBarang::with([
+            'user.division',
+            'request_detail.product',
+            'request_type',
+            'request_approval',
+        ])->findOrFail($id);
 
         $grandTotal = 0;
 
         foreach ($requestBarang->request_detail as $detail) {
+            $productPrice = optional($detail->product)->price ?? 0;
+
             if ($detail->qty_approved === null) {
-               $grandTotal += $detail->product->price * $detail->qty_request; 
+                $grandTotal += $productPrice * $detail->qty_request;
             } else if ($detail->qty_approved === 0) {
-                $grandTotal += $detail->product->price * $detail->qty_approved;
+                $grandTotal += $productPrice * $detail->qty_approved;
             } else {
-                $grandTotal += $detail->product->price * $detail->qty_approved;
+                $grandTotal += $productPrice * $detail->qty_approved;
             }
 
         }
@@ -588,7 +595,7 @@ class RequestController extends Controller
             return $filename;
 
         } catch (Exception $e) {
-            return redirect('request')->with(['error' => $e->getMessage()]);
+            throw $e;
         }
     }
 
@@ -651,9 +658,10 @@ class RequestController extends Controller
             $requestBarang->status_client = $request->status_client;
             $requestBarang->save();
 
-            $getData = RequestApproval::where('request_id', $requestBarang->id)
-            ->where('approval_type', 'ENDUSER')
-            ->first();
+            $getData = RequestApproval::firstOrNew([
+                'request_id' => $requestBarang->id,
+                'approval_type' => 'ENDUSER',
+            ]);
             
             $getData->approved_by = Auth::user()->id;
             $getData->approved_at = Carbon::now()->format('Y-m-d H:i:s');
@@ -674,9 +682,10 @@ class RequestController extends Controller
             $requestBarang->status_po = $request->status_po;
             $requestBarang->save();
             
-            $getData = RequestApproval::where('request_id', $requestBarang->id)
-            ->where('approval_type', 'ACCOUNTING')
-            ->first();
+            $getData = RequestApproval::firstOrNew([
+                'request_id' => $requestBarang->id,
+                'approval_type' => 'ACCOUNTING',
+            ]);
             
             $getData->approved_by = Auth::user()->id;
             $getData->approved_at = Carbon::now()->format('Y-m-d H:i:s');
@@ -693,9 +702,10 @@ class RequestController extends Controller
         try {
             $user = Auth::user()->id;
 
-            $getData = RequestApproval::where('request_id', $requestBarang->id)
-            ->where('approval_type', 'EXECUTOR')
-            ->first();
+            $getData = RequestApproval::firstOrNew([
+                'request_id' => $requestBarang->id,
+                'approval_type' => 'EXECUTOR',
+            ]);
 
             if($request->status == 'PENDING'){
                 $getData->approved_by = null;
@@ -745,8 +755,8 @@ class RequestController extends Controller
 
     public function showEditPage($id, $requestId)
     {
-        $detail = RequestDetail::with('product')->find($id);
-        $requestId = RequestBarang::find($requestId);
+        $detail = RequestDetail::with('product')->findOrFail($id);
+        $requestId = RequestBarang::findOrFail($requestId);
 
         return view('request.showEdit', [
             'detail' => $detail,
@@ -757,7 +767,7 @@ class RequestController extends Controller
     public function updateRequest(Request $request, $id)
     {
         try {
-            $detail = RequestDetail::find($id);
+            $detail = RequestDetail::findOrFail($id);
 
             $detail->qty_approved = $request->qty_approved;
             $detail->save();
@@ -771,9 +781,10 @@ class RequestController extends Controller
     public function fixRequest(Request $request, $id)
     {
         try {
-            $requestApprov = RequestApproval::where('request_id', $id)
-            ->where('approval_type', 'MANAGER')
-            ->first();
+            $requestApprov = RequestApproval::firstOrNew([
+                'request_id' => $id,
+                'approval_type' => 'MANAGER',
+            ]);
 
             $detailRequestNull = RequestDetail::where('request_id', $id)->whereNull('qty_approved')->get();
 
@@ -830,37 +841,39 @@ class RequestController extends Controller
     }
 
     public function export(Request $request){
-        
-        if ($request->exportRequest) {
-            $data = explode('-', preg_replace('/\s+/', '', $request->exportRequest));
-            $date1 = Carbon::parse($data[0])->format('Y-m-d');
-            $date2 = Carbon::parse($data[1])->format('Y-m-d');
-            $date2 = date('Y-m-d', strtotime('+ 1 day', strtotime($date2)));
-            //GET ADDITIONAL ID
+        try {
+            [$date1, $date2] = $this->parseExportDateRange($request->exportRequest);
             $area_id = $request->area_id;
             $request_type_id = $request->request_type_id;
-            $request_type = RequestType::where('id', $request_type_id)->value('request_type');
             $filter_request = $request->selectFilterRequest;
-        }
 
-        return Excel::download(new RequestExport($date1, $date2, $area_id, $request_type_id, $filter_request), 'pengajuan_'. str_replace(['/', '\\'], '_', $request_type) . '_'. $date1 . '_to_' . $date2 . '.xlsx');
+            if (! $area_id || ! $request_type_id) {
+                return redirect('request')->with(['error' => 'Area dan tipe request wajib dipilih untuk export.']);
+            }
+
+            $request_type = RequestType::where('id', $request_type_id)->value('request_type') ?: 'request';
+
+            return Excel::download(new RequestExport($date1, $date2, $area_id, $request_type_id, $filter_request), 'pengajuan_'. str_replace(['/', '\\'], '_', $request_type) . '_'. $date1 . '_to_' . $date2 . '.xlsx');
+        } catch (\Throwable $e) {
+            return redirect('request')->with(['error' => $e->getMessage()]);
+        }
     }
 
     public function exportMasterQR(Request $request){
-        
-        if ($request->exportQR) {
-            $data = explode('-', preg_replace('/\s+/', '', $request->exportQR));
-            $date1 = Carbon::parse($data[0])->format('Y-m-d');
-            // dd($date1);
-            $date2 = Carbon::parse($data[1])->format('Y-m-d');
-            $date2 = date('Y-m-d', strtotime('+ 1 day', strtotime($date2)));
-            //GET ADDITIONAL ID
-            // $area_id = $request->area_id;
+        try {
+            [$date1, $date2] = $this->parseExportDateRange($request->exportQR);
             $request_type_id = $request->request_type_id;
-            $request_type = RequestType::where('id', $request_type_id)->value('request_type');
+
+            if (! $request_type_id) {
+                return redirect('request')->with(['error' => 'Tipe request wajib dipilih untuk export QR.']);
+            }
+
+            $request_type = RequestType::where('id', $request_type_id)->value('request_type') ?: 'request';
+
+            return Excel::download(new RequestMasterQRExport($date1, $date2, $request_type_id), 'QR_pengajuan_'. str_replace(['/', '\\'], '_', $request_type) . '_'. $date1 . '_to_' . $date2 . '.xlsx');
+        } catch (\Throwable $e) {
+            return redirect('request')->with(['error' => $e->getMessage()]);
         }
-        
-        return Excel::download(new RequestMasterQRExport($date1, $date2, $request_type_id), 'QR_pengajuan_'. str_replace(['/', '\\'], '_', $request_type) . '_'. $date1 . '_to_' . $date2 . '.xlsx');
     }
 
     public function editApplicant(RequestBarang $requestBarang)
@@ -875,16 +888,21 @@ class RequestController extends Controller
     {
         try {
             if ($request->EditType == 'editApplicant') {
+                $newApplicant = User::find($request->user_id);
+
+                if (! $newApplicant) {
+                    return redirect('request')->with('error', 'Pemohon baru tidak ditemukan.');
+                }
+
+                $oldApplicant = User::find($request->user_id_before);
+
                 $requestBarang->user_id = $request->user_id;
                 $requestBarang->save();
-
-                $newApplicant = User::where('id', $request->user_id)->first()->fullname;
-                $oldApplicant = User::where('id', $request->user_id_before)->first()->fullname;
 
                 $requestLog = RequestLog::create([
                     'user_id' => Auth::user()->id,
                     'request_id' => $request->id,
-                    'activity' => Auth::user()->fullname . ' merubah pemohon ' . $oldApplicant . ' menjadi ' . $newApplicant,
+                    'activity' => Auth::user()->fullname . ' merubah pemohon ' . optional($oldApplicant)->fullname . ' menjadi ' . $newApplicant->fullname,
                 ]);
                 $requestLog->save();
 

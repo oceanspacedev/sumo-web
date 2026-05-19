@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Saat Ini Sedang Offline | SUMO</title>
+    <title>Halaman Tidak Ditemukan | SUMO</title>
     <style>
         * {
             box-sizing: border-box;
@@ -25,6 +25,14 @@
         .error-page {
             max-width: 520px;
             text-align: center;
+        }
+
+        .error-code {
+            color: #6e749e;
+            font-size: 88px;
+            font-weight: 700;
+            line-height: 1;
+            margin: 0 0 18px;
         }
 
         .error-title {
@@ -54,9 +62,10 @@
 </head>
 <body>
 <main class="error-page">
-    <h1 class="error-title">Tidak ada koneksi internet</h1>
+    <p class="error-code">404</p>
+    <h1 class="error-title">Halaman tidak ditemukan</h1>
     <p class="error-description">
-        Periksa koneksi Anda, lalu coba buka halaman ini lagi.
+        URL yang dimasukkan tidak cocok dengan halaman di SUMO. Periksa kembali alamatnya atau kembali ke halaman utama.
     </p>
     <a href="/" class="error-action">Kembali ke Halaman Utama</a>
 </main>

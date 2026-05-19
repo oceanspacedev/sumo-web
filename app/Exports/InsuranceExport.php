@@ -26,6 +26,7 @@ class InsuranceExport implements FromCollection, WithHeadings, WithMapping
     public function headings(): array
     {
         return [
+            'id',
             'no_polis',
             'alamat_tertanggung',
             'nama_tertanggung',
@@ -50,6 +51,7 @@ class InsuranceExport implements FromCollection, WithHeadings, WithMapping
     public function map($insurance) : array
     {
         return [
+            $insurance->id,
             $insurance->policy_number,
             $insurance->insured_address,
             $insurance->insured_name,
@@ -63,10 +65,10 @@ class InsuranceExport implements FromCollection, WithHeadings, WithMapping
             $insurance->building_insurance_provider->insurance_provider ?? '',
             $insurance->building_worth,
             $insurance->building_premium,
-            $insurance->insurance_category->insurance_category,
+            $insurance->insurance_category->insurance_category ?? '',
             Carbon::parse($insurance->join_date)->format('Y-m-d'),
             Carbon::parse($insurance->expired_date)->format('Y-m-d'),
-            $insurance->insurance_scope->insurance_scope,
+            $insurance->insurance_scope->insurance_scope ?? '',
             $insurance->notes,
         ];
     }

@@ -26,7 +26,10 @@ class InsuranceUpdateExport implements FromCollection, WithHeadings, WithMapping
     {
         $id = $this->id;
 
-        return InsuranceUpdate::where('insurance_id',$id)->get();
+        return InsuranceUpdate::with([
+            'stock_insurance_provider',
+            'building_insurance_provider',
+        ])->where('insurance_id',$id)->get();
     }
 
     public function headings(): array
@@ -52,11 +55,11 @@ class InsuranceUpdateExport implements FromCollection, WithHeadings, WithMapping
         return [
             $this->policy_number,
             $insurance->policy_number,
-            $insurance->stock_insurance_provider->insurance_provider,
+            $insurance->stock_insurance_provider->insurance_provider ?? '',
             $insurance->stock_worth,
             $insurance->actual_stock_worth,
             $insurance->stock_premium,
-            $insurance->building_insurance_provider->insurance_provider,
+            $insurance->building_insurance_provider->insurance_provider ?? '',
             $insurance->building_worth,
             $insurance->building_premium,
             Carbon::parse($insurance->join_date)->format('Y-m-d'),

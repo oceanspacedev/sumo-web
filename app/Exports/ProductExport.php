@@ -33,8 +33,8 @@ class ProductExport implements FromCollection, WithHeadings, WithMapping
     {
         return [
             $product->product,
-            $product->category->category,
-            $product->unit_type->unit_type,
+            $product->category->category ?? '',
+            $product->unit_type->unit_type ?? '',
             $product->price,
             $product->description,
             $product->stock,

@@ -315,6 +315,14 @@ class RequestController extends Controller
                 }            
                 break;
         }
+
+        $requestBarangs->getCollection()->loadMissing([
+            'user.division',
+            'closedby',
+            'request_detail',
+            'request_type',
+            'request_approval.user',
+        ]);
         
         return view('request.index', [
             'requestBarangs' => $requestBarangs,

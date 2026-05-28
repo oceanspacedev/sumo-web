@@ -51,6 +51,8 @@ class InsuranceController extends Controller
                 'building_insurance_provider',
                 'insurance_category',
                 'insurance_scope',
+                'insurance_update.stock_insurance_provider',
+                'insurance_update.building_insurance_provider',
                 'insurance_update'=> function($query) {$query->latest('expired_date');
             }])
             ->where('policy_number','LIKE','%'.$request->search.'%')
@@ -65,6 +67,8 @@ class InsuranceController extends Controller
                 'building_insurance_provider',
                 'insurance_category',
                 'insurance_scope',
+                'insurance_update.stock_insurance_provider',
+                'insurance_update.building_insurance_provider',
                 'insurance_update' => function($query) use($request) {
                     $query->latest('expired_date');
             }])
@@ -85,6 +89,8 @@ class InsuranceController extends Controller
                 'building_insurance_provider',
                 'insurance_category',
                 'insurance_scope',
+                'insurance_update.stock_insurance_provider',
+                'insurance_update.building_insurance_provider',
                 'insurance_update' => function($query) {
                     $query->where('status', '!=', 'TUTUP')
                     ->where('status', '!=', 'REFUND')

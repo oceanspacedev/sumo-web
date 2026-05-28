@@ -2,14 +2,12 @@
 
 namespace App\Exports;
 
-use App\Models\RequestDetail;
-use App\Models\RequestBarang;
 use App\Models\Divisi;
 use App\Models\Product;
+use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Concerns\FromArray;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
-use Illuminate\Support\Facades\DB;
 
 class RequestExport implements FromArray, WithHeadings, WithMapping
 {
@@ -18,6 +16,9 @@ class RequestExport implements FromArray, WithHeadings, WithMapping
     protected String $area_id;
     protected String $request_type_id;
     protected String $filter_request;
+    protected $products;
+    protected $divisions;
+    protected $totalsByProductAndDivision;
 
     function __construct(String $date1, String $date2, String $area_id, String $request_type_id, String $filter_request)
     {
@@ -30,87 +31,29 @@ class RequestExport implements FromArray, WithHeadings, WithMapping
 
     public function array(): array
     {
-        $area_id = $this->area_id;
-        $request_type_id = $this->request_type_id;
-        $products = Product::where('category_id', $request_type_id)->get();
-        $divisions = Divisi::orderBy('division')
-            ->where('area_id', $area_id)
-            ->whereNull('deleted_at') // Filter divisi yang tidak dihapus
-            ->get();
+        $products = $this->getProducts();
+        $divisions = $this->getDivisions();
+        $totalsByProductAndDivision = $this->getTotalsByProductAndDivision();
         $result = [];
-        $totalPrice = 0;
-        $totalItemsAllProducts = 0;
-        $filter_request = $this->filter_request;
+        $divisionTotalItems = $divisions->mapWithKeys(function ($division) {
+            return [$division->id => 0];
+        })->toArray();
+        $divisionPriceItems = $divisionTotalItems;
 
         foreach ($products as $product) {
             $qty = [];
-            $totalPricePerProduct = [];
             $totalPricePerDivision = [];
-            $totalProductPerProduct = [];
-            $totalItemsPerDivision = [];
 
             foreach ($divisions as $division) {
-                $total = 0;
-
-                $requestsQuery = RequestBarang::with(['user' => function($query) {
-                        $query->whereNull('deleted_at');
-                    }, 'user.division' => function($query) {
-                        $query->whereNull('deleted_at');
-                    }, 'user.division.area', 'closedby', 'request_detail.product', 'request_type', 'request_approval'])
-                    ->where('request_type_id', $request_type_id)
-                    ->whereHas('user', function ($query) use ($division, $area_id) {
-                        $query->where('division_id', $division->id)
-                              ->whereNull('deleted_at')
-                              ->whereHas('division.area', function ($query) use ($area_id) {
-                                  $query->where('area_id', $area_id);
-                              });
-                    })
-                    ->whereBetween('created_at', [$this->date1, $this->date2]);
-
-                switch ($filter_request) {
-                    case 0:
-                        $requestsQuery->whereHas('request_approval', function ($q) {
-                            $q->where('approval_type', 'EXECUTOR')
-                              ->where('approved_by', null);
-                        });
-                        break;
-                    case 1:
-                        $requestsQuery->whereHas('request_approval', function ($q) {
-                            $q->where('approval_type', 'EXECUTOR')
-                              ->where('approved_by', '!=', null);
-                        });
-                        break;
-                    case 3:
-                        $requestsQuery->where('status_client', '!=', 2);
-                        break;
-                    case 4:
-                        $requestsQuery->where('status_client', 2);
-                        break;
-                    case 5:
-                        $requestsQuery->where('status_client', 4);
-                        break;
-                    default:
-                        $requestsQuery->where('status_client', '!=', 2);
-                        break;
-                }
-
-                $requests = $requestsQuery->get();
-
-                foreach ($requests as $request) {
-                    foreach ($request->request_detail as $reqdetail) {
-                        if ($reqdetail->product_id == $product->id) {
-                            $total += $reqdetail->qty_approved ?? $reqdetail->qty_request;
-                        }
-                    }
-                }
+                $total = $totalsByProductAndDivision[$product->id.':'.$division->id] ?? 0;
                 $totalPricePerDivision[$division->division] = ($total * $product->price);
                 $qty[$division->id] = $total;
-                $totalItemsPerDivision[$division->division] = $total;
+                $divisionTotalItems[$division->id] += $total;
+                $divisionPriceItems[$division->id] += $total * $product->price;
             }
+
             $totalPricePerProduct = array_sum($totalPricePerDivision);
-            $totalPrice += $totalPricePerProduct;
             $totalProductPerProduct = array_sum($qty);
-            $totalItemsAllDivisions = array_sum($totalItemsPerDivision);
 
             array_push($result, [
                 'product_name' => $product->product,
@@ -122,22 +65,8 @@ class RequestExport implements FromArray, WithHeadings, WithMapping
             ]);
         }
 
-        $divisionTotalItems = [];
-        $divisionPriceItems = [];
-
-        foreach ($divisions as $division) {
-            $divisionTotal = 0;
-            $divisionPrice = 0;
-
-            foreach ($result as $product) {
-                if (isset($product['qty'][$division->id])) {
-                    $divisionTotal += $product['qty'][$division->id];
-                    $divisionPrice += $product['qty'][$division->id] * $product['price'];
-                }
-            }
-            $divisionTotalItems[] = $divisionTotal;
-            $divisionPriceItems[] = $divisionPrice;
-        }
+        $divisionTotalItems = array_values($divisionTotalItems);
+        $divisionPriceItems = array_values($divisionPriceItems);
 
         $divisionTotalRow = [
             'product_name' => 'Total Item per Divisi',
@@ -164,14 +93,7 @@ class RequestExport implements FromArray, WithHeadings, WithMapping
 
     public function headings(): array
     {
-        $area_id = $this->area_id;
-
-        $division = DB::table('divisions')
-            ->where('area_id', $area_id)
-            ->whereNull('deleted_at') // Filter divisi yang tidak dihapus
-            ->orderBy('division')
-            ->pluck('division')
-            ->toArray();
+        $division = $this->getDivisions()->pluck('division')->toArray();
 
         $headings = ['Barang', 'Tipe Unit', 'Harga'];
         $endHeadings = ['Total Item', 'Total Biaya'];
@@ -185,5 +107,109 @@ class RequestExport implements FromArray, WithHeadings, WithMapping
         $result = [$row['product_name'], $row['unit_type'], $row['price']];
         $result = array_merge($result, $row['qty'], [$row['total_item'], $row['total_price']]);
         return $result;
+    }
+
+    protected function getProducts()
+    {
+        if ($this->products === null) {
+            $this->products = Product::with('unit_type')
+                ->where('category_id', $this->request_type_id)
+                ->get();
+        }
+
+        return $this->products;
+    }
+
+    protected function getDivisions()
+    {
+        if ($this->divisions === null) {
+            $this->divisions = Divisi::orderBy('division')
+                ->where('area_id', $this->area_id)
+                ->whereNull('deleted_at') // Filter divisi yang tidak dihapus
+                ->get();
+        }
+
+        return $this->divisions;
+    }
+
+    protected function getTotalsByProductAndDivision()
+    {
+        if ($this->totalsByProductAndDivision !== null) {
+            return $this->totalsByProductAndDivision;
+        }
+
+        $productIds = $this->getProducts()->pluck('id')->toArray();
+        $divisionIds = $this->getDivisions()->pluck('id')->toArray();
+
+        if (empty($productIds) || empty($divisionIds)) {
+            $this->totalsByProductAndDivision = collect();
+
+            return $this->totalsByProductAndDivision;
+        }
+
+        $query = DB::table('request_details')
+            ->join('requests', 'request_details.request_id', '=', 'requests.id')
+            ->join('users', 'requests.user_id', '=', 'users.id')
+            ->join('divisions', 'users.division_id', '=', 'divisions.id')
+            ->join('areas', 'divisions.area_id', '=', 'areas.id')
+            ->where('requests.request_type_id', $this->request_type_id)
+            ->whereIn('request_details.product_id', $productIds)
+            ->whereIn('divisions.id', $divisionIds)
+            ->where('divisions.area_id', $this->area_id)
+            ->whereNull('request_details.deleted_at')
+            ->whereNull('requests.deleted_at')
+            ->whereNull('users.deleted_at')
+            ->whereNull('divisions.deleted_at')
+            ->whereNull('areas.deleted_at')
+            ->whereBetween('requests.created_at', [$this->date1, $this->date2]);
+
+        switch ($this->filter_request) {
+            case 0:
+                $query->whereExists(function ($q) {
+                    $q->select(DB::raw(1))
+                        ->from('request_approvals')
+                        ->whereColumn('request_approvals.request_id', 'requests.id')
+                        ->where('request_approvals.approval_type', 'EXECUTOR')
+                        ->whereNull('request_approvals.approved_by')
+                        ->whereNull('request_approvals.deleted_at');
+                });
+                break;
+            case 1:
+                $query->whereExists(function ($q) {
+                    $q->select(DB::raw(1))
+                        ->from('request_approvals')
+                        ->whereColumn('request_approvals.request_id', 'requests.id')
+                        ->where('request_approvals.approval_type', 'EXECUTOR')
+                        ->whereNotNull('request_approvals.approved_by')
+                        ->whereNull('request_approvals.deleted_at');
+                });
+                break;
+            case 3:
+                $query->where('requests.status_client', '!=', 2);
+                break;
+            case 4:
+                $query->where('requests.status_client', 2);
+                break;
+            case 5:
+                $query->where('requests.status_client', 4);
+                break;
+            default:
+                $query->where('requests.status_client', '!=', 2);
+                break;
+        }
+
+        $this->totalsByProductAndDivision = $query
+            ->select(
+                'request_details.product_id',
+                'divisions.id as division_id',
+                DB::raw('SUM(COALESCE(request_details.qty_approved, request_details.qty_request)) as total_qty')
+            )
+            ->groupBy('request_details.product_id', 'divisions.id')
+            ->get()
+            ->mapWithKeys(function ($row) {
+                return [$row->product_id.':'.$row->division_id => $row->total_qty + 0];
+            });
+
+        return $this->totalsByProductAndDivision;
     }
 }

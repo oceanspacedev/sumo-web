@@ -27,7 +27,7 @@ class DashboardController extends Controller
     public function index(Request $request)
     {
         //INISIALISASI HIGHEST REQUEST ITEM
-        $highestRequestItem = RequestBarang::with('request_detail', 'user.division.area')
+        $highestRequestItem = RequestBarang::with('user')
             ->selectRaw('user_id, request_type_id, date, CASE WHEN areas.id IN (4, 5) AND request_type_id = 2 THEN SUM(request_details.qty_approved) ELSE SUM(request_details.qty_request) END AS highestRequestItem')
             ->join('users', 'requests.user_id', '=', 'users.id')
             ->join('divisions', 'users.division_id', '=', 'divisions.id')
@@ -38,7 +38,7 @@ class DashboardController extends Controller
             ->orderBy('highestRequestItem', 'DESC');
 
         //INISIALISASI HIGHEST REQUEST COST
-        $highestRequestCost = RequestBarang::with('request_detail', 'request_detail.product', 'user.division.area')
+        $highestRequestCost = RequestBarang::with('user')
             ->selectRaw('user_id, request_type_id, date, CASE WHEN areas.id IN (4, 5) AND request_type_id = 2 THEN SUM(request_details.qty_approved * products.price) ELSE SUM(request_details.qty_request * products.price) END AS highestRequestCost')
             ->join('users', 'requests.user_id', '=', 'users.id')
             ->join('divisions', 'users.division_id', '=', 'divisions.id')
@@ -262,7 +262,8 @@ class DashboardController extends Controller
             ->take(5)
             ->get();
 
-            $problemReport = ProblemReport::where('closed_by', null)
+            $problemReport = ProblemReport::with('user', 'prcategory')
+            ->where('closed_by', null)
             ->orderBy('date', 'desc')
             ->limit(5)
             ->take(5)
@@ -273,6 +274,8 @@ class DashboardController extends Controller
                 'building_insurance_provider',
                 'insurance_category',
                 'insurance_scope',
+                'insurance_update.stock_insurance_provider',
+                'insurance_update.building_insurance_provider',
                 'insurance_update' => function($query) {
                     $query->where('status', '!=', 'TUTUP')
                     ->where('status', '!=', 'REFUND')

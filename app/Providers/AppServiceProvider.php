@@ -154,7 +154,7 @@ class AppServiceProvider extends ServiceProvider
             }
 
             if(Auth::check() && Auth::user()->role_id > 3) {
-                $requestApprove = RequestBarang::with('user', 'request_approval.user')
+                $requestApprove = RequestBarang::with('user', 'request_type', 'request_approval.user')
                 ->whereHas('request_approval', function ($query) {
                     $query->where('approval_type', 'EXECUTOR')
                     ->where('approved_by', '!=', null);
@@ -167,7 +167,8 @@ class AppServiceProvider extends ServiceProvider
                 ->where('status_client', '!=', 2)
                 ->get();
 
-                $problemApprove = ProblemReport::where('user_id', Auth::id())
+                $problemApprove = ProblemReport::with('prcategory', 'closedby')
+                ->where('user_id', Auth::id())
                 ->where('closed_by', '!=', null)
                 ->where('status_client', 0)
                 ->get();

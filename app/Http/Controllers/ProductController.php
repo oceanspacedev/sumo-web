@@ -23,7 +23,9 @@ class ProductController extends Controller
      */
     public function index(Request $request)
     {
-        $products = Product::orderBy('product')->paginate(30);
+        $products = Product::with('category', 'unit_type')
+            ->orderBy('product')
+            ->paginate(30);
 
         if($request->has('search')){
             $products = Product::with('category', 'unit_type')

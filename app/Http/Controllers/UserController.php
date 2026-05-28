@@ -34,10 +34,12 @@ class UserController extends Controller
      */
     public function index(Request $request)
     {
-        $users = User::with('division')->withTrashed()->paginate(30);
+        $users = User::with('division.area', 'badan_usaha', 'role', 'approval')
+            ->withTrashed()
+            ->paginate(30);
 
         if($request->has('search')){
-            $users = User::with('division')
+            $users = User::with('division.area', 'badan_usaha', 'role', 'approval')
             ->where('fullname', 'LIKE', '%'.$request->search.'%')
             ->withTrashed()
             ->paginate(30);

@@ -172,7 +172,7 @@ class RequestExport implements FromArray, WithHeadings, WithMapping
                         ->where('request_approvals.approval_type', 'EXECUTOR')
                         ->whereNull('request_approvals.approved_by')
                         ->whereNull('request_approvals.deleted_at');
-                });
+                })->where('requests.status_client', '!=', 2);
                 break;
             case 1:
                 $query->whereExists(function ($q) {
@@ -182,7 +182,7 @@ class RequestExport implements FromArray, WithHeadings, WithMapping
                         ->where('request_approvals.approval_type', 'EXECUTOR')
                         ->whereNotNull('request_approvals.approved_by')
                         ->whereNull('request_approvals.deleted_at');
-                });
+                })->where('requests.status_client', '!=', 2);
                 break;
             case 3:
                 $query->where('requests.status_client', '!=', 2);

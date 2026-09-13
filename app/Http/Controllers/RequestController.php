@@ -23,6 +23,9 @@ use Exception;
 
 class RequestController extends Controller
 {
+    private const MAX_OPEN_REQUESTS_PER_TYPE = 2;
+    private const OPEN_CLIENT_STATUSES = [0, 3, 4];
+
     /**
      * Display a listing of the resource.
      *
@@ -372,43 +375,28 @@ class RequestController extends Controller
         try {
             $user = Auth::user()->id;
             
-            //SEMUA TIPE PENGAJUAN KALAU USER BELUM CLOSE GABISA NAMBAH
-            $pengajuanAsset = RequestBarang::with('user')
-            ->where('user_id', $user)
-            ->where('request_type_id', '1')
-            ->whereIn('status_client', [0, 3, 4])
-            ->count();
-            
-            $pengajuanATK = RequestBarang::with('user')
-            ->where('user_id', $user)
-            ->where('request_type_id', '2')
-            ->whereIn('status_client', [0, 3, 4])
-            ->count();
+            //SEMUA TIPE PENGAJUAN KALAU USER BELUM CLOSE GABISA NAMBAH (MAKS 2 PER TIPE)
+            $pengajuanAsset = $this->countOpenRequestsByType($user, 1);
+            $pengajuanATK = $this->countOpenRequestsByType($user, 2);
+            $pengajuanNota = $this->countOpenRequestsByType($user, 3);
+            $maxOpen = self::MAX_OPEN_REQUESTS_PER_TYPE;
 
-            // dd($pengajuanATK);
-
-            $pengajuanNota = RequestBarang::with('user')
-            ->where('user_id', $user)
-            ->where('request_type_id', '3')
-            ->whereIn('status_client', [0, 3, 4])
-            ->count();
-
-            if ($pengajuanAsset >= 1 && $pengajuanATK >=1 && $pengajuanNota >=1) {
+            if ($pengajuanAsset >= $maxOpen && $pengajuanATK >= $maxOpen && $pengajuanNota >= $maxOpen) {
                 return redirect('request')->with(['error' => 'Harap menunggu hingga pengajuan diproses dan status akhir diselesaikan !']);
             }
 
             //TRY LOGIC
             $requestTypes = [];
 
-            if ($pengajuanAsset == 0) {
+            if ($pengajuanAsset < $maxOpen) {
                 array_push($requestTypes, RequestType::find(1));
             }
 
-            if ($pengajuanNota == 0) {
+            if ($pengajuanNota < $maxOpen) {
                 array_push($requestTypes, RequestType::find(3));
             } 
             
-            if ($pengajuanATK == 0) {
+            if ($pengajuanATK < $maxOpen) {
                 array_push($requestTypes, RequestType::find(2));
             }
             // END LOGIC
@@ -466,6 +454,11 @@ class RequestController extends Controller
 
             if ($request->request_type_id == null) {
                 return redirect('request/create')->with('error', 'Harap pilih tipe pengajuan !');
+            }
+
+            $pendingForType = $this->countOpenRequestsByType(Auth::user()->id, $request->request_type_id);
+            if ($pendingForType >= self::MAX_OPEN_REQUESTS_PER_TYPE) {
+                return redirect('request')->with(['error' => 'Harap menunggu hingga pengajuan diproses dan status akhir diselesaikan !']);
             }
 
             if ($request->request_type_id == 1 || $request->request_type_id == 3) {
@@ -929,5 +922,13 @@ class RequestController extends Controller
         return view('request-logs.index', [
             'logs' => RequestLog::paginate(30),
         ]);
+    }
+
+    private function countOpenRequestsByType($userId, $typeId)
+    {
+        return RequestBarang::where('user_id', $userId)
+            ->where('request_type_id', $typeId)
+            ->whereIn('status_client', self::OPEN_CLIENT_STATUSES)
+            ->count();
     }
 }

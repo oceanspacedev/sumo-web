@@ -8,7 +8,6 @@ use App\Models\RequestDetail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Barryvdh\DomPDF\Facade\Pdf;
-use Illuminate\Support\Facades\App;
 use Milon\Barcode\DNS2D;
 
 class AuthController extends Controller
@@ -55,9 +54,8 @@ class AuthController extends Controller
 
     public function printrequestqr($id)
     {
-        $pdf = App::make('dompdf.wrapper');
         $barcode = new DNS2D();
-        $pdf->loadHTML($barcode->getBarcodeHTML(strval($id), 'QRCODE'));
+        $pdf = Pdf::loadHTML($barcode->getBarcodeHTML(strval($id), 'QRCODE'));
 
         return $pdf->stream('requestqr.pdf');
     }
@@ -80,9 +78,8 @@ class AuthController extends Controller
     
     public function printproductqr($id)
     {
-        $pdf = App::make('dompdf.wrapper');
         $barcode = new DNS2D();
-        $pdf->loadHTML($barcode->getBarcodeHTML(strval($id), 'QRCODE'));
+        $pdf = Pdf::loadHTML($barcode->getBarcodeHTML(strval($id), 'QRCODE'));
 
         return $pdf->stream('productqr.pdf');
     }

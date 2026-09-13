@@ -2,9 +2,10 @@
 
 namespace App\Exports;
 
+use Maatwebsite\Excel\Concerns\Export;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 
-class InsuranceTemplateExport implements WithHeadings
+class InsuranceTemplateExport implements Export, WithHeadings
 {
     public function headings(): array
     {

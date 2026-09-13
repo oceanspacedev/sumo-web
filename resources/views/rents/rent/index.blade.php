@@ -1,6 +1,11 @@
 @extends('layouts.master')
 
 @section('content')
+    @php
+        $rentalDays = static fn ($expiredDate, $joinDate): int =>
+            abs((int) Carbon\Carbon::parse($expiredDate)->diffInDays($joinDate, true));
+    @endphp
+
     <div class="main">
         <div class="main-content">
             <div class="container-fluid">
@@ -109,7 +114,7 @@
                                             $reminderDate = Carbon\Carbon::parse($rent->expired_date)->subMonths($rent->month_before_reminder)->format('d M Y');
                                         }
 
-                                        $diffInDays = Carbon\Carbon::now()->diffInDays($expiredDate, false);
+                                        $diffInDays = (int) Carbon\Carbon::today()->diffInDays($expiredDate->copy()->startOfDay(), false);
 
                                         $rowStyle = ''; // initialize the variable
 
@@ -199,15 +204,15 @@
                                         <td><strong>
                                             @if ($rent->rent_update->isNotEmpty())
                                                 Rp {{ number_format(
-                                                    Carbon\Carbon::parse($rent->rent_update->first()->expired_date)->diffInDays($rent->rent_update->first()->join_date) / 366 == 1 
+                                                    $rentalDays($rent->rent_update->first()->expired_date, $rent->rent_update->first()->join_date) / 366 == 1
                                                     ? 1 * $rent->rent_update->first()->rent_per_year 
-                                                    : ceil(Carbon\Carbon::parse($rent->rent_update->first()->expired_date)->diffInDays($rent->rent_update->first()->join_date) / 366) * $rent->rent_update->first()->rent_per_year, 0, ',', '.') 
+                                                    : ceil($rentalDays($rent->rent_update->first()->expired_date, $rent->rent_update->first()->join_date) / 366) * $rent->rent_update->first()->rent_per_year, 0, ',', '.')
                                             }}
                                             @else
                                                 Rp {{ number_format(
-                                                    Carbon\Carbon::parse($rent->expired_date)->diffInDays($rent->join_date) / 366 == 1 
+                                                    $rentalDays($rent->expired_date, $rent->join_date) / 366 == 1
                                                     ? 1 * $rent->rent_per_year 
-                                                    : ceil(Carbon\Carbon::parse($rent->expired_date)->diffInDays($rent->join_date) / 366) * $rent->rent_per_year, 0, ',', '.')  
+                                                    : ceil($rentalDays($rent->expired_date, $rent->join_date) / 366) * $rent->rent_per_year, 0, ',', '.')
                                             }}
                                             @endif
                                         </strong></td>
@@ -229,15 +234,15 @@
                                         <td><strong>
                                             @if ($rent->rent_update->isNotEmpty())
                                                 Rp {{ number_format(
-                                                    Carbon\Carbon::parse($rent->rent_update->first()->expired_date)->diffInDays($rent->rent_update->first()->join_date) / 366 == 1 
+                                                    $rentalDays($rent->rent_update->first()->expired_date, $rent->rent_update->first()->join_date) / 366 == 1
                                                     ? (1 * $rent->rent_update->first()->rent_per_year) - ($rent->rent_update->first()->cvcs_fund + $rent->rent_update->first()->online_fund)
-                                                    : (ceil(Carbon\Carbon::parse($rent->rent_update->first()->expired_date)->diffInDays($rent->rent_update->first()->join_date) / 366) * $rent->rent_update->first()->rent_per_year) - ($rent->rent_update->first()->cvcs_fund + $rent->rent_update->first()->online_fund), 0, ',', '.') 
+                                                    : (ceil($rentalDays($rent->rent_update->first()->expired_date, $rent->rent_update->first()->join_date) / 366) * $rent->rent_update->first()->rent_per_year) - ($rent->rent_update->first()->cvcs_fund + $rent->rent_update->first()->online_fund), 0, ',', '.')
                                             }}
                                             @else
                                                 Rp {{ number_format(
-                                                    Carbon\Carbon::parse($rent->expired_date)->diffInDays($rent->join_date) / 366 == 1 
+                                                    $rentalDays($rent->expired_date, $rent->join_date) / 366 == 1
                                                     ? (1 * $rent->rent_per_year) - ($rent->cvcs_fund + $rent->online_fund)
-                                                    : (ceil(Carbon\Carbon::parse($rent->expired_date)->diffInDays($rent->join_date) / 366 ) * $rent->rent_per_year) - ($rent->cvcs_fund + $rent->online_fund), 0, ',', '.')  
+                                                    : (ceil($rentalDays($rent->expired_date, $rent->join_date) / 366 ) * $rent->rent_per_year) - ($rent->cvcs_fund + $rent->online_fund), 0, ',', '.')
                                             }}
                                             @endif
                                         </strong></td>
@@ -245,18 +250,18 @@
                                         <td><strong>
                                             @if ($rent->rent_update->isNotEmpty())
                                                 @php
-                                                    $remainingPayment = (Carbon\Carbon::parse($rent->rent_update->first()->expired_date)->diffInDays($rent->rent_update->first()->join_date) / 366 == 1)
+                                                    $remainingPayment = ($rentalDays($rent->rent_update->first()->expired_date, $rent->rent_update->first()->join_date) / 366 == 1)
                                                     ? (1 * $rent->rent_update->first()->rent_per_year) - ($rent->rent_update->first()->cvcs_fund + $rent->rent_update->first()->online_fund)
-                                                    : (ceil(Carbon\Carbon::parse($rent->rent_update->first()->expired_date)->diffInDays($rent->rent_update->first()->join_date) / 366) * $rent->rent_update->first()->rent_per_year) - ($rent->rent_update->first()->cvcs_fund + $rent->rent_update->first()->online_fund);
+                                                    : (ceil($rentalDays($rent->rent_update->first()->expired_date, $rent->rent_update->first()->join_date) / 366) * $rent->rent_update->first()->rent_per_year) - ($rent->rent_update->first()->cvcs_fund + $rent->rent_update->first()->online_fund);
 
                                                     $status = $remainingPayment == 0 ? 'LUNAS' : ($remainingPayment < 0 ? 'LEBIH' : 'BELUM LUNAS');
                                                 @endphp
                                                 {{ $status }}
                                             @else
                                                 @php
-                                                    $remainingPayment = (Carbon\Carbon::parse($rent->expired_date)->diffInDays($rent->join_date) / 366 == 1)
+                                                    $remainingPayment = ($rentalDays($rent->expired_date, $rent->join_date) / 366 == 1)
                                                     ? (1 * $rent->rent_per_year) - ($rent->cvcs_fund + $rent->online_fund)
-                                                    : (ceil(Carbon\Carbon::parse($rent->expired_date)->diffInDays($rent->join_date) / 366) * $rent->rent_per_year) - ($rent->cvcs_fund + $rent->online_fund);
+                                                    : (ceil($rentalDays($rent->expired_date, $rent->join_date) / 366) * $rent->rent_per_year) - ($rent->cvcs_fund + $rent->online_fund);
 
                                                     $status = $remainingPayment == 0 ? 'LUNAS' : ($remainingPayment < 0 ? 'LEBIH' : 'BELUM LUNAS');
                                                 @endphp

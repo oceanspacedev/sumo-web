@@ -11,8 +11,6 @@ use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Facades\Excel;
 use Exception;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Http\UploadedFile;
-use Intervention\Image\ImageManagerStatic as Image;
 
 class RentUpdateController extends Controller
 {
@@ -69,13 +67,7 @@ class RentUpdateController extends Controller
                 $filename = "RENT-DEDUCT-".$date."_". time() .".".$extension;
             }
 
-            // Use Intervention Image to convert the image
-            if (in_array($extension, ['jpeg', 'png', 'jpg']) && $file->getSize() > 2048 * 1024) {
-                $compressedImage = Image::make($file)->encode($extension, 30);
-                $tmpFile = tempnam(sys_get_temp_dir(), 'compressed-');
-                file_put_contents($tmpFile, $compressedImage);
-                $file = new UploadedFile($tmpFile, $file->getClientOriginalName(), $file->getClientMimeType(), null, true);
-            }
+            $file = $this->compressImageFile($file);
     
             $file->storeAs($path, $filename, $disk);
     

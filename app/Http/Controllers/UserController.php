@@ -62,21 +62,24 @@ class UserController extends Controller
      */
     public function create(Request $request)
     {
+        $profile_picture = null;
+
         try {
-            $request['password'] = bcrypt($request->password);
-            
-            $user = User::create($request->all());
-
-            $user->remember_token = Str::random(60);
-            $user->save();
-
             $profile_picture = $this->storeImage($request);
 
+            // Validate/store the optional photo before inserting a complete user.
+            $user = new User($request->except(['password', 'profile_picture']));
+            $user->password = Hash::make($request->password);
+            $user->remember_token = Str::random(60);
             $user->profile_picture = $profile_picture;
             $user->save();
 
             return redirect('user')->with('success', 'Data berhasil diinput !');
         } catch (Exception $e) {
+            if ($profile_picture !== null) {
+                Storage::disk('public')->delete('profile/'.$profile_picture);
+            }
+
             return redirect('user')->with(['error' => $e->getMessage()]);
         }
     }
@@ -85,10 +88,14 @@ class UserController extends Controller
     {
         try {
             $this->validate($request, [
-                'profile_picture' => 'required|file|image|mimes:jpeg,png,jpg|max:2048',
+                'profile_picture' => 'nullable|file|image|mimes:jpeg,png,jpg|max:2048',
             ]);
     
             $file = $request->file('profile_picture');
+            if ($file === null) {
+                return null;
+            }
+
             $date = Carbon::now()->format('Y-m-d');
             $fullname = $request->fullname;
             $extension = $file->getClientOriginalExtension();
@@ -98,8 +105,13 @@ class UserController extends Controller
             }
     
             $filename = "Profile - ".$fullname." ".$date."_". time() .".".$extension;
-    
-            $file->storeAs($path, $filename, $disk);
+            while (Storage::disk($disk)->exists($path.'/'.$filename)) {
+                $filename = "Profile - ".$fullname." ".$date."_".time()."_".Str::random(10).".".$extension;
+            }
+
+            if ($file->storeAs($path, $filename, $disk) === false) {
+                throw new Exception('Foto profil gagal disimpan.');
+            }
     
             return $filename;
 

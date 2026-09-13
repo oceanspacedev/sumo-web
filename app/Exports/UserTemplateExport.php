@@ -2,9 +2,10 @@
 
 namespace App\Exports;
 
+use Maatwebsite\Excel\Concerns\Export;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 
-class UserTemplateExport implements WithHeadings
+class UserTemplateExport implements Export, WithHeadings
 {
     /**
     * @return \Illuminate\Support\Collection

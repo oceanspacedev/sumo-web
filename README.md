@@ -1,64 +1,120 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400"></a></p>
+# Web Gais
 
-<p align="center">
-<a href="https://travis-ci.org/laravel/framework"><img src="https://travis-ci.org/laravel/framework.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Web Gais menggunakan Laravel 12, PHP 8.4, dan Vite 7. Endpoint, format JSON, tampilan Bootstrap, dan aturan akses aplikasi lama dipertahankan.
 
-## About Laravel
+## Kebutuhan runtime
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- PHP **8.4.x** atau versi 8.x berikutnya yang memenuhi `composer check-platform-reqs`, dengan PDO MySQL/SQLite, GD, fileinfo, mbstring, XML/DOM, cURL, dan ZIP.
+- Composer 2; platform resolusi lockfile ditetapkan ke PHP `8.4.0`, tanpa mengabaikan persyaratan platform.
+- Node.js **22.12+** dan npm. Vite 7 memakai ESM.
+- MySQL dengan charset `utf8mb4`, collation `utf8mb4_unicode_ci`, dan strict mode sesuai `config/database.php`.
+- Web server menunjuk ke direktori `public`; direktori `storage` dan `bootstrap/cache` harus dapat ditulis oleh proses aplikasi.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Instalasi baru
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+```bash
+cp .env.example .env
+composer install
+php artisan key:generate
+```
 
-## Learning Laravel
+Atur koneksi `DB_*` ke database kosong, lalu jalankan:
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+```bash
+php artisan migrate
+php artisan storage:link
+npm ci
+npm run build
+```
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains over 1500 video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+Seeder historis tersedia melalui `php artisan db:seed` untuk database baru yang memerlukan data awal tersebut. `UserSeeder` memakai akun dan password contoh yang sudah ada di repository; sesuaikan kredensialnya sebelum dipakai untuk pengguna sebenarnya. Jangan menjalankan seeder ini pada database lama karena datanya diinsert kembali.
 
-## Laravel Sponsors
+Gunakan `php artisan serve` dan `npm run dev` untuk pengembangan. `npm run watch` membangun ulang aset saat sumber berubah. Build produksi harus menyertakan `public/build` beserta manifest; `@vite` akan menunjukkan error jika aset belum dibangun.
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the Laravel [Patreon page](https://patreon.com/taylorotwell).
+Aplikasi tetap mendukung `FILESYSTEM_DRIVER`, `CACHE_DRIVER`, `SESSION_DRIVER`, `QUEUE_CONNECTION`, dan konfigurasi environment lama. Disk lokal tetap berakar di `storage/app`, disk publik di `storage/app/public`; default cache/session tetap file dan queue tetap sync. Timezone tetap `Asia/Jakarta`, pagination tetap Bootstrap 3.
 
-### Premium Partners
+Isi `SENTRY_LARAVEL_DSN` untuk pelaporan error backend. Integrasi Sentry didaftarkan sekali melalui `bootstrap/app.php`; tidak perlu menambahkan handler atau channel Sentry kedua. Provider aplikasi berada di `bootstrap/providers.php`.
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Cubet Techno Labs](https://cubettech.com)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[Many](https://www.many.co.uk)**
-- **[Webdock, Fast VPS Hosting](https://www.webdock.io/en)**
-- **[DevSquad](https://devsquad.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[OP.GG](https://op.gg)**
-- **[WebReinvent](https://webreinvent.com/?utm_source=laravel&utm_medium=github&utm_campaign=patreon-sponsors)**
-- **[Lendio](https://lendio.com)**
+## Upgrade database lama
 
-## Contributing
+1. Backup database, upload, `.env`, source code, dan kedua lockfile; simpan versi rilis sebelumnya untuk rollback.
+2. Siapkan rilis baru memakai PHP 8.4 dan `composer install --no-dev --optimize-autoloader`, lalu `npm ci` dan `npm run build`. Pertahankan `.env`, `APP_KEY`, dan storage yang lama.
+3. Masuk maintenance, hentikan worker yang memakai kode lama, dan bersihkan cache konfigurasi lama sebelum menjalankan kode Laravel 12. Cache lama dapat merujuk kernel/provider yang sudah dihapus.
+4. Pada rilis baru jalankan `php artisan migrate --force`, `php artisan storage:link` bila symlink belum ada, lalu `php artisan config:cache`, `php artisan route:cache`, dan `php artisan view:cache`.
+5. Arahkan web server ke rilis baru; mulai ulang worker queue dan scheduler memakai PHP 8.4. Verifikasi login, token API, upload, dan halaman utama sebelum keluar dari maintenance.
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+Migration upgrade `2026_02_04_114039_add_expires_at_to_personal_access_tokens_table` hanya menambahkan `expires_at` nullable dan index. Token, tabel, dan data lama tidak dibuat ulang. Semua migration historis tetap tersedia untuk instalasi baru; jangan memakai `migrate:fresh` pada database aplikasi. Token lama dengan expiry `NULL` tetap berlaku mengikuti konfigurasi Sanctum. Token baru mendukung expiry tanpa mengubah respons endpoint login.
 
-## Code of Conduct
+## Aset dan PWA
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+- JavaScript aplikasi: `resources/js/app.js`; registrasi service worker: `resources/js/pwa.js`.
+- Scanner: `resources/js/scanqr.js` dan `resources/js/productqr.js`.
+- Vendor/CDN, jQuery global, plugin formulir, datepicker, Highcharts, serta scanner tetap memakai urutan pemuatan aplikasi.
+- Worker tetap `/sw.js` dengan scope `/`, manifest dan fallback `/offline.html` tetap tersedia. Uji service worker melalui HTTPS atau localhost.
+- Konfigurasi manifest lama memakai origin produksi SUMO; identitas tersebut dipertahankan. Mengganti origin instalasi PWA merupakan perubahan konfigurasi terpisah.
 
-## Security Vulnerabilities
+## Scheduler dan queue
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+`autoapprove` terdaftar di `routes/console.php` dan berjalan setiap menit:
 
-## License
+```cron
+* * * * * cd /path/ke/web-gais && php artisan schedule:run >> /dev/null 2>&1
+```
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+Untuk pengembangan gunakan `php artisan schedule:work`. Command hanya memperbarui problem report sesuai kondisi tanggal lama; pada MySQL batasnya memakai tanggal, bukan rolling 24 jam. Pertahankan koneksi queue yang sudah digunakan dan mulai ulang worker pada pergantian rilis.
+
+## Pengujian
+
+```bash
+composer validate --strict
+composer install
+composer check-platform-reqs
+composer audit
+php artisan config:clear
+php artisan test
+npm ci
+npm test
+npm run build
+npm audit
+```
+
+Suite standar memakai SQLite in-memory dan tidak membutuhkan Vite yang sedang berjalan. Suite mencakup login/token, middleware dan akses, approval, biaya/kuantitas, reminder/sewa, impor/ekspor XLSX, template, PDF/QR, dan unggahan gambar/PDF. `npm test` memakai test runner Node tanpa dependency tambahan untuk registrasi PWA dan perilaku offline worker.
+
+Jalankan suite MySQL pada **database terisolasi yang boleh dikosongkan**. Suite ini menolak nama database yang tidak berakhiran `_test` atau `_testing`, tidak mengambil koneksi aplikasi dari `.env`, dan menggunakan `migrate:fresh`:
+
+```bash
+MYSQL_TEST_DATABASE=web_gais_test \
+MYSQL_TEST_HOST=127.0.0.1 \
+MYSQL_TEST_PORT=3306 \
+MYSQL_TEST_USERNAME=root \
+MYSQL_TEST_PASSWORD='test-password' \
+php vendor/bin/phpunit -c phpunit.mysql.xml
+```
+
+Untuk Unix socket gunakan `MYSQL_TEST_SOCKET=/path/ke/mysql.sock`. Buat database tersebut terlebih dahulu dengan `utf8mb4_unicode_ci`. Suite MySQL menguji query dashboard, lookup impor tanpa membedakan kapitalisasi, approval, serta instalasi kosong dan upgrade schema lama berisi fixture, termasuk token yang tetap dapat dipakai. Tes menolak config cache agar koneksi pengujian tidak tertimpa konfigurasi aplikasi.
+
+Periksa cache pada environment validasi sebelum rilis:
+
+```bash
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
+php artisan route:list
+php artisan schedule:list
+php artisan config:clear
+php artisan route:clear
+```
+
+Hasil validasi dan batas pemeriksaan browser dicatat di [laporan upgrade](docs/upgrade-validation.md). Cakupan CRUD tambahan, empat perbaikan bug, dan hasil tes regresi tersedia di [laporan CRUD](docs/crud-validation.md). Temuan bisnis lain yang tidak diubah tersedia di [catatan bisnis](docs/legacy-business-observations.md).
+
+## Rollback
+
+Masuk maintenance dan hentikan worker. Pulihkan rilis, lockfile, PHP runtime, dan aset build versi sebelumnya, pertahankan `APP_KEY` serta storage, lalu bersihkan/bangun kembali cache menggunakan runtime rilis tersebut. Kolom tambahan nullable `expires_at` boleh tetap ada ketika kode lama dipulihkan.
+
+Jika benar-benar perlu menghapus kolom expiry, pastikan backup tersedia dan migration tersebut masih migration terakhir, lalu gunakan `php artisan migrate:rollback --step=1 --force` dengan kode Laravel 12 sebelum memulihkan kode lama. Penghapusan kolom menghilangkan metadata expiry; token dengan expiry yang sebelumnya aktif dapat kembali tidak dibatasi waktu. Pulihkan snapshot database hanya jika rollback memang memerlukan data lama dan perubahan setelah backup sudah diperhitungkan. Jangan gunakan reset/fresh sebagai rollback aplikasi.
+
+## Referensi upgrade
+
+- [Laravel 12 upgrade guide](https://laravel.com/docs/12.x/upgrade)
+- [Laravel Excel 4 upgrade guide](https://docs.laravel-excel.com/4.x/getting-started/upgrade.html)
+- [Laravel 12 frontend scaffold](https://raw.githubusercontent.com/laravel/laravel/12.x/package.json)

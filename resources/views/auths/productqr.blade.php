@@ -123,67 +123,6 @@
 	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
 	<script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
-	<script>
-		function onScanSuccess(decodedText, decodedResult) {
-			// handle the scanned code as you like, for example:
-			// console.log(`Code matched = ${decodedText}`, decodedResult);
-			$("#result").val(decodedText);
-			console.log(decodedText);
-
-			$('#loading').show();
-
-			// Send AJAX request to search data
-			$.ajax({
-				url: '/search-product',
-				method: 'POST',
-				headers: {
-					'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-				},
-				data: {
-					id: decodedText
-				},
-				success: function(response) {
-					// Handle the response from the server
-					console.log(response);
-
-					if (response.length > 0) {
-						var data = response[0];
-
-						$('#product').val(data.product);
-						$('#category').val(data.category.category);
-						$('#unittype').val(data.unit_type.unit_type);
-						$('#price').val(data.price);
-					}
-					$('#loading').hide();
-				},
-				error: function(xhr, status, error) {
-					console.error(xhr.status + ': ' + xhr.statusText);
-					console.error(error);
-
-					 $('#loading').hide();
-				}
-			});
-		}
-		
-		function onScanFailure(error) {
-			// handle scan failure, usually better to ignore and keep scanning.
-			// for example:
-				console.warn(`Code scan error = ${error}`);
-			}
-			
-		let html5QrcodeScanner = new Html5QrcodeScanner(
-			"reader",
-			{ fps: 10, qrbox: {width: 250, height: 250} },
-			/* verbose= */ false);
-			html5QrcodeScanner.render(onScanSuccess, onScanFailure);
-	</script>
-	<script src="{{ asset('/sw.js') }}"></script>
-	<script>
-		if (!navigator.serviceWorker.controller) {
-			navigator.serviceWorker.register("/sw.js").then(function (reg) {
-				console.log("Service worker has been registered for scope: " + reg.scope);
-			});
-		}
-	</script>
+	@vite(['resources/js/pwa.js', 'resources/js/productqr.js'])
 </body>
 </html>

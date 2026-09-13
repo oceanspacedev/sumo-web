@@ -1,6 +1,11 @@
 @extends('layouts.master')
 
 @section('content')
+    @php
+        $rentalDays = static fn ($expiredDate, $joinDate): int =>
+            abs((int) Carbon\Carbon::parse($expiredDate)->diffInDays($joinDate, true));
+    @endphp
+
     <div class="main">
         <div class="main-content">
             <div class="container-fluid">
@@ -50,23 +55,23 @@
                                     <h5><strong>Sewa per Tahun : </strong>Rp {{ number_format($detailRent->rent_per_year, 0, ',', '.') }}</h5>
                                     <h5><strong>Total Tagihan : </strong>
                                     Rp {{ number_format(
-                                        Carbon\Carbon::parse($detailRent->expired_date)->diffInDays($detailRent->join_date) / 366 == 1
+                                        $rentalDays($detailRent->expired_date, $detailRent->join_date) / 366 == 1
                                             ? 1 * $detailRent->rent_per_year 
-                                            : ceil(Carbon\Carbon::parse($detailRent->expired_date)->diffInDays($detailRent->join_date) / 366) * $detailRent->rent_per_year, 0, ',', '.') 
+                                            : ceil($rentalDays($detailRent->expired_date, $detailRent->join_date) / 366) * $detailRent->rent_per_year, 0, ',', '.')
                                     }}</h5>
                                     <h5><strong>Dana PKP : </strong>Rp {{ number_format($detailRent->cvcs_fund, 0, ',', '.') }}</h5>
                                     <h5><strong>Dana NON-PKP : </strong>Rp {{ number_format($detailRent->online_fund, 0, ',', '.') }}</h5>
                                     <h5><strong>Sisa Tagihan : </strong>
                                     Rp {{ number_format(
-                                            Carbon\Carbon::parse($detailRent->expired_date)->diffInDays($detailRent->join_date) / 366 == 1 
+                                            $rentalDays($detailRent->expired_date, $detailRent->join_date) / 366 == 1
                                             ? (1 * $detailRent->rent_per_year) - ($detailRent->cvcs_fund + $detailRent->online_fund)
-                                            : (ceil(Carbon\Carbon::parse($detailRent->expired_date)->diffInDays($detailRent->join_date) / 366) * $detailRent->rent_per_year) - ($detailRent->cvcs_fund + $detailRent->online_fund), 0, ',', '.')  
+                                            : (ceil($rentalDays($detailRent->expired_date, $detailRent->join_date) / 366) * $detailRent->rent_per_year) - ($detailRent->cvcs_fund + $detailRent->online_fund), 0, ',', '.')
                                     }}</h5>
                                     <h5><strong>Status Tagihan : </strong>
                                     @php
-                                        $remainingPayment = (Carbon\Carbon::parse($detailRent->expired_date)->diffInDays($detailRent->join_date) / 366 == 1)
+                                        $remainingPayment = ($rentalDays($detailRent->expired_date, $detailRent->join_date) / 366 == 1)
                                         ? (1 * $detailRent->rent_per_year) - ($detailRent->cvcs_fund + $detailRent->online_fund)
-                                        : ((Carbon\Carbon::parse($detailRent->expired_date)->diffInDays($detailRent->join_date) / 366) * $detailRent->rent_per_year) - ($detailRent->cvcs_fund + $detailRent->online_fund);
+                                        : (($rentalDays($detailRent->expired_date, $detailRent->join_date) / 366) * $detailRent->rent_per_year) - ($detailRent->cvcs_fund + $detailRent->online_fund);
 
                                         $status = $remainingPayment == 0 ? 'LUNAS' : ($remainingPayment < 0 ? 'LEBIH' : 'BELUM LUNAS');
                                     @endphp
@@ -131,7 +136,7 @@
                                         @php
                                             $expiredDate = Carbon\Carbon::parse($detail->expired_date);
                                             $reminderDate = Carbon\Carbon::parse($detail->expired_date)->subMonths($detail->month_before_reminder)->format('d M Y');
-                                            $diffInDays = Carbon\Carbon::now()->diffInDays($expiredDate, false);
+                                            $diffInDays = (int) Carbon\Carbon::today()->diffInDays($expiredDate->copy()->startOfDay(), false);
 
                                             if ((Carbon\Carbon::now() >= Carbon\Carbon::parse($reminderDate)->subDays(30)) && (Carbon\Carbon::now() < Carbon\Carbon::parse($reminderDate))) {
                                                 $rowStyle = 'background-color: #fcf8e3; color: #8a6d3b;';
@@ -160,9 +165,9 @@
                                             <td>Rp {{ number_format($detail->rent_per_year, 0, ',', '.') }}</td>
                                             <!-- TOTAL TAGIHAN -->
                                             <td><strong>Rp {{ number_format(
-                                                Carbon\Carbon::parse($detail->expired_date)->diffInDays($detail->join_date) / 366 == 1
+                                                $rentalDays($detail->expired_date, $detail->join_date) / 366 == 1
                                                     ? 1 * $detail->rent_per_year 
-                                                    : ceil(Carbon\Carbon::parse($detail->expired_date)->diffInDays($detail->join_date) / 366) * $detail->rent_per_year, 0, ',', '.') 
+                                                    : ceil($rentalDays($detail->expired_date, $detail->join_date) / 366) * $detail->rent_per_year, 0, ',', '.')
                                             }}
                                             </strong></td>
                                             <td>Rp {{ number_format($detail->cvcs_fund, 0, ',', '.') }}</td>
@@ -170,17 +175,17 @@
                                             <!-- SISA TAGIHAN -->
                                             <td><strong>
                                                 Rp {{ number_format(
-                                                    Carbon\Carbon::parse($detail->expired_date)->diffInDays($detail->join_date) / 366 == 1 
+                                                    $rentalDays($detail->expired_date, $detail->join_date) / 366 == 1
                                                     ? (1 * $detail->rent_per_year) - ($detail->cvcs_fund + $detail->online_fund)
-                                                    : (ceil(Carbon\Carbon::parse($detail->expired_date)->diffInDays($detail->join_date) / 366) * $detail->rent_per_year) - ($detail->cvcs_fund + $detail->online_fund), 0, ',', '.')  
+                                                    : (ceil($rentalDays($detail->expired_date, $detail->join_date) / 366) * $detail->rent_per_year) - ($detail->cvcs_fund + $detail->online_fund), 0, ',', '.')
                                             }}
                                             </strong></td>
                                             <!-- STATUS TAGIHAN -->
                                             <td><strong>
                                                 @php
-                                                    $remainingPayment = (Carbon\Carbon::parse($detail->expired_date)->diffInDays($detail->join_date) / 366 == 1)
+                                                    $remainingPayment = ($rentalDays($detail->expired_date, $detail->join_date) / 366 == 1)
                                                     ? (1 * $detail->rent_per_year) - ($detail->cvcs_fund + $detail->online_fund)
-                                                    : (ceil(Carbon\Carbon::parse($detail->expired_date)->diffInDays($detail->join_date) / 366) * $detail->rent_per_year) - ($detail->cvcs_fund + $detail->online_fund);
+                                                    : (ceil($rentalDays($detail->expired_date, $detail->join_date) / 366) * $detail->rent_per_year) - ($detail->cvcs_fund + $detail->online_fund);
 
                                                     $status = $remainingPayment == 0 ? 'LUNAS' : ($remainingPayment < 0 ? 'LEBIH' : 'BELUM LUNAS');
                                                 @endphp

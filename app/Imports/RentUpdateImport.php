@@ -4,6 +4,7 @@ namespace App\Imports;
 
 use App\Models\Rent;
 use App\Models\RentUpdate;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Maatwebsite\Excel\Concerns\ToModel;
@@ -12,7 +13,7 @@ use Carbon\Carbon;
 
 class RentUpdateImport implements ToModel, WithHeadingRow
 {
-    public function model(array $row)
+    public function model(array $row): ?Model
     {
         if (empty($row['kode_sewa_induk'])) {
             return null;
@@ -54,8 +55,12 @@ class RentUpdateImport implements ToModel, WithHeadingRow
             $rentUpdate->user_id = Auth::id();
 
             $rentUpdate->save();
+
+            return null;
         }
         //else belum ada no_polis_induk nya
+
+        return null;
     }
 
     private function parseDate($value, string $fieldName, string $rentUpdateLabel, bool $required = false): ?string

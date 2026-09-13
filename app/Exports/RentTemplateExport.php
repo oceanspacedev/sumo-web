@@ -2,9 +2,10 @@
 
 namespace App\Exports;
 
+use Maatwebsite\Excel\Concerns\Export;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 
-class RentTemplateExport implements WithHeadings
+class RentTemplateExport implements Export, WithHeadings
 {
     public function headings(): array
     {

@@ -110,7 +110,7 @@
                                         @foreach ($detailInsurance->insurance_update->sortByDesc('expired_date') as $detail)
                                         @php
                                             $expiredDate = Carbon\Carbon::parse($detail->expired_date);
-                                            $diffInDays = Carbon\Carbon::now()->diffInDays($expiredDate, false);
+                                            $diffInDays = (int) Carbon\Carbon::now()->diffInDays($expiredDate, false);
 
                                             if ($diffInDays <= 30 && $diffInDays > 14) {
                                                 $rowStyle = 'background-color: #fcf8e3; color: #8a6d3b;';

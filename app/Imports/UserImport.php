@@ -6,6 +6,7 @@ use App\Models\BadanUsaha;
 use App\Models\Divisi;
 use App\Models\Role;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Model;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 
@@ -16,7 +17,7 @@ class UserImport implements ToModel, WithHeadingRow
     *
     * @return \Illuminate\Database\Eloquent\Model|null
     */
-    public function model(array $row)
+    public function model(array $row): ?Model
     {
         if (empty($row['username'])) {
             // stop processing if username is empty
@@ -44,6 +45,8 @@ class UserImport implements ToModel, WithHeadingRow
                 'role_id' => $role_id,
                 'approval_id' => $approval_id,
             ]);
+
+            return null;
         } else {
             return new User([
                 'username' => $username,

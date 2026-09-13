@@ -6,6 +6,7 @@ use App\Models\Insurance;
 use App\Models\InsuranceCategory;
 use App\Models\InsuranceProvider;
 use App\Models\InsuranceScope;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
@@ -18,7 +19,7 @@ class InsuranceImport implements ToModel, WithHeadingRow
     *
     * @return \Illuminate\Database\Eloquent\Model|null
     */
-    public function model(array $row)
+    public function model(array $row): ?Model
     {
         if (empty($row['no_polis'])) {
             return null;
@@ -58,6 +59,8 @@ class InsuranceImport implements ToModel, WithHeadingRow
                 'notes' => $row['catatan'] ?? $insurance->notes,
                 'status' => $row['status'] ?? 'BERJALAN',
             ]);
+
+            return null;
         } else {
             return new Insurance([
                 'policy_number' => $row['no_polis'],

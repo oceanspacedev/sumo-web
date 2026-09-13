@@ -111,7 +111,7 @@
                                             $expiredDate = Carbon\Carbon::parse($insurance->expired_date);
                                         }
 
-                                        $diffInDays = Carbon\Carbon::now()->diffInDays($expiredDate, false);
+                                        $diffInDays = (int) Carbon\Carbon::now()->diffInDays($expiredDate, false);
 
                                         $rowStyle = ''; // initialize the variable
 

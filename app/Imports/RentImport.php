@@ -3,6 +3,7 @@
 namespace App\Imports;
 
 use App\Models\Rent;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Maatwebsite\Excel\Concerns\ToModel;
@@ -11,7 +12,7 @@ use Carbon\Carbon;
 
 class RentImport implements ToModel, WithHeadingRow
 {
-    public function model(array $row)
+    public function model(array $row): ?Model
     {
         if (empty($row['kode']) && empty($row['nama_bangunan']) && empty($row['alamat_bangunan'])) {
             return null;
@@ -40,6 +41,8 @@ class RentImport implements ToModel, WithHeadingRow
                 'notes' => $row['catatan'] ?? $rent->notes,
                 'user_id' => Auth::id(),
             ]);
+
+            return null;
         } else {
             $prefix = 'RENT';
             $count = DB::table('rents')->count() + 1;

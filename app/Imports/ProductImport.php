@@ -5,6 +5,7 @@ namespace App\Imports;
 use App\Models\Category;
 use App\Models\UnitType;
 use App\Models\Product;
+use Illuminate\Database\Eloquent\Model;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 
@@ -15,7 +16,7 @@ class ProductImport implements ToModel, WithHeadingRow
     *
     * @return \Illuminate\Database\Eloquent\Model|null
     */
-    public function model(array $row)
+    public function model(array $row): ?Model
     {
         if (empty($row['nama_barang'])) {
             return null;
@@ -36,6 +37,8 @@ class ProductImport implements ToModel, WithHeadingRow
                 'description' => $row['keterangan'] ?? $product->description,
                 'stock' => $row['stok'] ?? $product->stock,
             ]);
+
+            return null;
         } else {
             return new Product([
                 'product' => $productName,

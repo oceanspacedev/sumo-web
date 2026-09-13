@@ -5,6 +5,7 @@ namespace App\Imports;
 use App\Models\Insurance;
 use App\Models\InsuranceUpdate;
 use App\Models\InsuranceProvider;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
@@ -27,7 +28,7 @@ class InsuranceUpdateImport implements ToModel, WithHeadingRow
     *
     * @return \Illuminate\Database\Eloquent\Model|null
     */
-    public function model(array $row)
+    public function model(array $row): ?Model
     {
         if (empty($row['no_polis_induk']) && empty($row['no_polis'])) {
             return null;
@@ -78,6 +79,8 @@ class InsuranceUpdateImport implements ToModel, WithHeadingRow
         $insuranceUpdate->status = $row['status'] ?? 'BERJALAN';
 
         $insuranceUpdate->save();
+
+        return null;
     }
 
     private function parseDate($value, string $fieldName, string $policyNumber, bool $required = false): ?string

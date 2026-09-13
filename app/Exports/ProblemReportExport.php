@@ -6,6 +6,7 @@ use App\Models\ProblemReport;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
+use Illuminate\Support\Enumerable;
 
 class ProblemReportExport implements FromCollection, WithHeadings, WithMapping
 {
@@ -21,7 +22,7 @@ class ProblemReportExport implements FromCollection, WithHeadings, WithMapping
     /**
     * @return \Illuminate\Support\Collection
     */
-    public function collection()
+    public function collection(): Enumerable
     {
         $date1 = $this->date1;
         $date2 = $this->date2;

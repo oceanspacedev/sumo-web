@@ -10,8 +10,6 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Storage;
-use Intervention\Image\ImageManagerStatic as Image;
-use Illuminate\Http\UploadedFile;
 use Exception;
 
 class ProblemReportController extends Controller
@@ -148,6 +146,7 @@ class ProblemReportController extends Controller
                 } else if ($request->selectStatusAkhir != null) {
                     $problems = ProblemReport::with('prcategory','user','closedby')
                     ->where('status_client', $request->selectStatusAkhir)
+                    ->where('user_id', $user)
                     ->orderBy('date', 'desc')
                     ->paginate(30);
                 } else {
@@ -253,13 +252,7 @@ class ProblemReportController extends Controller
                 $filename = "PR-AFTER-".$date."_". time() .".".$extension;
             }
 
-            // Use Intervention Image to convert the image
-            if (in_array($extension, ['jpeg', 'png', 'jpg']) && $file->getSize() > 2048 * 1024) {
-                $compressedImage = Image::make($file)->encode($extension, 30);
-                $tmpFile = tempnam(sys_get_temp_dir(), 'compressed-');
-                file_put_contents($tmpFile, $compressedImage);
-                $file = new UploadedFile($tmpFile, $file->getClientOriginalName(), $file->getClientMimeType(), null, true);
-            }
+            $file = $this->compressImageFile($file);
     
             $file->storeAs($path, $filename, $disk);
     
@@ -316,8 +309,9 @@ class ProblemReportController extends Controller
                 $problem->scheduled_at = Carbon::parse($request->scheduled_at)->format('Y-m-d');
             }
 
-            $photo_after = $request->photo_after == null ? null : $this->storeImage($request, 'photo_after');
-            $problem->photo_after = $photo_after;
+            if ($request->photo_after != null) {
+                $problem->photo_after = $this->storeImage($request, 'photo_after');
+            }
             $problem->result_desc = $request->result_desc;
             $problem->status = $request->status;       
             $problem->save();

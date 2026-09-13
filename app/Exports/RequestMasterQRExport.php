@@ -6,6 +6,7 @@ use App\Models\RequestBarang;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
+use Illuminate\Support\Enumerable;
 
 class RequestMasterQRExport implements FromCollection, WithHeadings, WithMapping
 {
@@ -21,7 +22,7 @@ class RequestMasterQRExport implements FromCollection, WithHeadings, WithMapping
         $this->request_type_id = $request_type_id;
     }
 
-    public function collection()
+    public function collection(): Enumerable
     {
         // $area_id = $this->area_id;
         $request_type_id = $this->request_type_id;

@@ -17,8 +17,6 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
 use Maatwebsite\Excel\Facades\Excel;
-use Intervention\Image\ImageManagerStatic as Image;
-use Illuminate\Http\UploadedFile;
 use Exception;
 
 class RequestController extends Controller
@@ -583,13 +581,7 @@ class RequestController extends Controller
                 $filename = "Req2-".$request_id."_".$date."_". time() .".".$extension;
             }
 
-            // Use Intervention Image to convert the image
-            if (in_array($extension, ['jpeg', 'png', 'jpg']) && $file->getSize() > 2048 * 1024) {
-                $compressedImage = Image::make($file)->encode($extension, 30);
-                $tmpFile = tempnam(sys_get_temp_dir(), 'compressed-');
-                file_put_contents($tmpFile, $compressedImage);
-                $file = new UploadedFile($tmpFile, $file->getClientOriginalName(), $file->getClientMimeType(), null, true);
-            }
+            $file = $this->compressImageFile($file);
     
             $file->storeAs($path, $filename, $disk);
     

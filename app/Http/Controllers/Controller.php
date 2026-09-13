@@ -7,13 +7,50 @@ use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Foundation\Bus\DispatchesJobs;
 use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Routing\Controller as BaseController;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
+use Intervention\Image\Laravel\Facades\Image;
 
 class Controller extends BaseController
 {
     use AuthorizesRequests, DispatchesJobs, ValidatesRequests;
+
+    /**
+     * Compress oversized raster uploads with the GD driver.
+     *
+     * The 2 MB threshold, JPEG quality, PNG output, and temporary-upload
+     * contract match the legacy Intervention Image implementation.
+     */
+    protected function compressImageFile(UploadedFile $file): UploadedFile
+    {
+        $extension = strtolower($file->getClientOriginalExtension());
+
+        if (! in_array($extension, ['jpeg', 'jpg', 'png'], true) || $file->getSize() <= 2048 * 1024) {
+            return $file;
+        }
+
+        $image = Image::decode($file);
+        $encoded = in_array($extension, ['jpeg', 'jpg'], true)
+            ? $image->encodeUsingFileExtension($extension, quality: 30)
+            : $image->encodeUsingFileExtension('png');
+        $tmpFile = tempnam(sys_get_temp_dir(), 'compressed-');
+
+        if ($tmpFile === false) {
+            throw new Exception('Tidak dapat membuat file sementara untuk kompresi gambar.');
+        }
+
+        file_put_contents($tmpFile, (string) $encoded);
+
+        return new UploadedFile(
+            $tmpFile,
+            $file->getClientOriginalName(),
+            $file->getClientMimeType(),
+            null,
+            true
+        );
+    }
 
     protected function storeImportFile(Request $request, string $disk = 'public'): string
     {

@@ -22,8 +22,6 @@
 	<!-- ICONS -->
 	<link rel="apple-touch-icon" sizes="76x76" href="{{asset('admin/assets/img/gais-block.png')}}">
 	<link rel="icon" type="image/png" sizes="96x96" href="{{asset('admin/assets/img/gais-block.png')}}">
-	<!-- Select2 -->
-	<link rel="stylesheet" href="{{ asset('template') }}/plugins/select2/css/select2.min.css">
 	<!-- datepicker -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.2.0/css/datepicker.min.css" rel="stylesheet">
 	<!-- daterange picker -->
@@ -69,23 +67,7 @@
 	<!-- date-range-picker -->
 	<script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>	
 	<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
-	<script>
-	$(document).ready(function () {
-		$('#tanggalScheduled').datepicker({
-			dateFormat: "yy-mm-dd",
-        	parentEl: "#editStatusModal .modal-body"
-   		});
-	});
-	</script>
-	<script src="{{ asset('/sw.js') }}"></script>
-	<script>
-		if (!navigator.serviceWorker.controller) {
-			navigator.serviceWorker.register("/sw.js").then(function (reg) {
-				console.log("Service worker has been registered for scope: " + reg.scope);
-			});
-		}
-	</script>
-	<script src="{{ asset('script.js') }}"></script>
+	@vite(['resources/js/app.js', 'resources/js/pwa.js'])
 	@yield('footer')
 </body>
 

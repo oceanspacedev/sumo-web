@@ -7,6 +7,7 @@ use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Enumerable;
 
 class RentUpdateExport implements FromCollection, WithHeadings, WithMapping
 {
@@ -22,7 +23,7 @@ class RentUpdateExport implements FromCollection, WithHeadings, WithMapping
     /**
     * @return \Illuminate\Support\Collection
     */
-    public function collection()
+    public function collection(): Enumerable
     {
         $id = $this->id;
 

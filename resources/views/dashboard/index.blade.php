@@ -1,6 +1,11 @@
 @extends('layouts.master')
 
 @section('content')
+    @php
+        $rentalDays = static fn ($expiredDate, $joinDate): int =>
+            abs((int) Carbon\Carbon::parse($expiredDate)->diffInDays($joinDate, true));
+    @endphp
+
     <div class="main">
         <div class="main-content">
             <div class="container-fluid">
@@ -464,15 +469,15 @@
                                                                 <td>
                                                                     @if ($rent->rent_update->isNotEmpty())
                                                                         Rp {{ number_format(
-                                                                            Carbon\Carbon::parse($rent->rent_update->first()->expired_date)->diffInDays($rent->rent_update->first()->join_date) / 366 == 1 
+                                                                            $rentalDays($rent->rent_update->first()->expired_date, $rent->rent_update->first()->join_date) / 366 == 1
                                                                             ? 1 * $rent->rent_update->first()->rent_per_year 
-                                                                            : ceil(Carbon\Carbon::parse($rent->rent_update->first()->expired_date)->diffInDays($rent->rent_update->first()->join_date) / 366) * $rent->rent_update->first()->rent_per_year, 0, ',', '.') 
+                                                                            : ceil($rentalDays($rent->rent_update->first()->expired_date, $rent->rent_update->first()->join_date) / 366) * $rent->rent_update->first()->rent_per_year, 0, ',', '.')
                                                                     }}
                                                                     @else
                                                                         Rp {{ number_format(
-                                                                            Carbon\Carbon::parse($rent->expired_date)->diffInDays($rent->join_date) / 366 == 1 
+                                                                            $rentalDays($rent->expired_date, $rent->join_date) / 366 == 1
                                                                             ? 1 * $rent->rent_per_year 
-                                                                            : ceil(Carbon\Carbon::parse($rent->expired_date)->diffInDays($rent->join_date) / 366) * $rent->rent_per_year, 0, ',', '.')  
+                                                                            : ceil($rentalDays($rent->expired_date, $rent->join_date) / 366) * $rent->rent_per_year, 0, ',', '.')
                                                                     }}
                                                                     @endif
                                                                 </td>
@@ -526,13 +531,12 @@
 @endsection
 
 @section('footer')
-<script src="https://code.highcharts.com/highcharts.js"></script>
 <script>
     const highestRequestUserData = [];
     @foreach($highestRequestUser as $index => $user)
         highestRequestUserData.push({
             name: {!! json_encode($user) !!},
-            data: [{!! json_encode($highestRequestUnit[$index]) !!}],
+            data: [Number({!! json_encode($highestRequestUnit[$index]) !!})],
         });
     @endforeach
 
@@ -578,12 +582,12 @@
     @foreach($highestRequestCostUser as $index => $user)
         highestRequestCostColumnData.push({
             name: {!! json_encode($user) !!},
-            y: {!! json_encode($highestRequestCostUnit[$index]) !!},
+            y: Number({!! json_encode($highestRequestCostUnit[$index]) !!}),
         });
 
         highestRequestCostLineData.push({
             name: {!! json_encode($user) !!},
-            y: {!! json_encode($highestRequestCostUnit[$index]) !!},
+            y: Number({!! json_encode($highestRequestCostUnit[$index]) !!}),
         });
     @endforeach
 
@@ -649,7 +653,7 @@
     @foreach($highestProblemTotalUser as $index => $user)
         highestProblemTotalData.push({
             name: {!! json_encode($user) !!},
-            y: {!! json_encode($highestProblemTotalUnit[$index]) !!},
+            y: Number({!! json_encode($highestProblemTotalUnit[$index]) !!}),
         });
     @endforeach
 
@@ -695,7 +699,7 @@
     @foreach($highestProblemCategoryUser as $index => $user)
         highestProblemCategoryData.push({
             name: {!! json_encode($user) !!},
-            y: {!! json_encode($highestProblemCategoryUnit[$index]) !!},
+            y: Number({!! json_encode($highestProblemCategoryUnit[$index]) !!}),
         });
     @endforeach
 
@@ -745,7 +749,7 @@
         @foreach($insurance_cost_monthyear as $index => $month_year)
             insuranceCostData.push({
                 name: {!! json_encode(date('M Y', strtotime($month_year))) !!},
-                data: [parseInt({!! json_encode($insurance_cost_total[$index]) !!})],
+                data: [Number({!! json_encode($insurance_cost_total[$index]) !!})],
             });
         @endforeach
 

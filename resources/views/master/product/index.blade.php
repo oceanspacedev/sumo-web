@@ -66,7 +66,7 @@
                                     <td>Rp {{ number_format($product->price, 0, ',', '.') }}</td>
                                     <td>{{ $product->description }}</td>
                                     <td><img src="{{ $product->getProductImage() }}" class="img" width="100px" alt="Barang" data-toggle="modal" data-target="#imageModal"></td>
-                                    <td>{{ $product->updated_at->formatLocalized('%A, %d %b %Y') }}</td>
+                                    <td>{{ $product->updated_at->format('l, d M Y') }}</td>
                                     <td>
                                         <a href="/product/{{$product->id}}/edit" class="btn btn-warning btn-xs"><span class="lnr lnr-pencil"></span></a>
                                         <a href="#" data-toggle="modal" data-target="#qrModal{{$product->id}}" class="btn btn-default btn-xs" data-toggle="tooltip" data-placement="top" title="Create QR Code"><i class="fa fa-qrcode"></i></a>

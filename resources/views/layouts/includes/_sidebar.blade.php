@@ -71,6 +71,7 @@
 							<li><a href="/division" class="{{ Request::is('division') ? 'active' : '' }}"><i class="lnr lnr-apartment"></i>DIVISI</a></li>
 							<li><a href="/request-settings" class="{{ Request::is('request-settings') ? 'active' : '' }}"><i class="lnr lnr-cart"></i>PENGAJUAN</a></li>
 							<li><a href="/request-logs" class="{{ Request::is('request-logs') ? 'active' : '' }}"><i class="lnr lnr-list"></i>LOG PENGAJUAN</a></li>
+							<li><a href="/notification-settings" class="{{ Request::is('notification-settings*') ? 'active' : '' }}"><i class="fa fa-whatsapp"></i>NOTIFIKASI WA</a></li>
 						</ul>
 					</div>
 				</li>

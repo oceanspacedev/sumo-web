@@ -313,6 +313,11 @@
                         <input name="insured_name" type="text" class="form-control" id="inputInsuredName" placeholder="Nama Tertanggung.." required>
                     </div>
                     <div class="form-group">
+                        <label for="inputReminderPhones" class="form-label">Nomor WhatsApp Pengingat</label>
+                        <input name="reminder_phones" type="text" class="form-control" id="inputReminderPhones" placeholder="Contoh: 081234567890, 089876543210">
+                        <small class="text-muted">Pisahkan dengan koma jika lebih dari satu. Kosongkan untuk memakai nomor di Pengaturan Notifikasi.</small>
+                    </div>
+                    <div class="form-group">
                         <label for="inputWarehouseCode" class="form-label">Kode Gudang</label>
                         <input name="warehouse_code" type="text" class="form-control" id="inputWarehouseCode" placeholder="Kode Gudang..">
                     </div>

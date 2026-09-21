@@ -4,6 +4,7 @@ use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
 use App\Console\Commands\AutoApprove;
+use App\Console\Commands\SendDeadlineReminder;
 
 /*
 |--------------------------------------------------------------------------
@@ -22,4 +23,8 @@ Artisan::command('inspire', function () {
 
 Schedule::command(AutoApprove::class)
     ->everyMinute()
+    ->appendOutputTo(storage_path('logs/scheduler.log'));
+
+Schedule::command(SendDeadlineReminder::class)
+    ->dailyAt('08:00')
     ->appendOutputTo(storage_path('logs/scheduler.log'));

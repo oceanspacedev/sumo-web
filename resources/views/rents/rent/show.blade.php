@@ -44,6 +44,7 @@
                                     <h5><strong>Alamat yang disewakan : </strong>{{ $detailRent->rented_address }}</h5>
                                     <h5><strong>Pihak Pertama : </strong>{{ $detailRent->first_party }}</h5>
                                     <h5><strong>Pihak Kedua : </strong>{{ $detailRent->second_party }}</h5>
+                                    <h5><strong>Nomor WhatsApp Pengingat : </strong>{{ $detailRent->reminder_phones ?: 'Mengikuti pengaturan notifikasi' }}</h5>
                                     <h5><strong>Bukti Potong : </strong>{{ $detailRent->deduction_evidence }}</h5>
                                     <h5><strong>Berkas : </strong>{{ $detailRent->document }}</h5>
                                     <h5><strong>Status : </strong>{{ $detailRent->status }}</h5>

@@ -55,6 +55,11 @@
                                             <input name="second_party" type="text" class="form-control" id="inputSecondParty" value="{{$rent->second_party}}" required>
                                         </div>
                                         <div class="form-group">
+                                            <label for="inputReminderPhones" class="form-label">Nomor WhatsApp Pengingat</label>
+                                            <input name="reminder_phones" type="text" class="form-control" id="inputReminderPhones" value="{{$rent->reminder_phones}}" placeholder="Contoh: 081234567890, 089876543210">
+                                            <small class="text-muted">Pisahkan dengan koma jika lebih dari satu. Kosongkan untuk memakai nomor di Pengaturan Notifikasi.</small>
+                                        </div>
+                                        <div class="form-group">
                                             <label for="inputRentPerYear" class="form-label">Nilai Sewa per Tahun</label>
                                             <input name="rent_per_year" type="number" class="form-control" id="inputRentPerYear" value="{{$rent->rent_per_year}}" required>
                                         </div>

@@ -40,6 +40,7 @@
                                     <h5><strong>Detail Asuransi : </strong>{{ $detailInsurance->insured_detail }}</h5>
                                     <h5><strong>Alamat yang diasuransikan : </strong>{{ $detailInsurance->risk_address }}</h5>
                                     <h5><strong>Nama Tertanggung : </strong>{{ $detailInsurance->insured_name }}</h5>
+                                    <h5><strong>Nomor WhatsApp Pengingat : </strong>{{ $detailInsurance->reminder_phones ?: 'Mengikuti pengaturan notifikasi' }}</h5>
                                     <h5><strong>Alamat Tertanggung : </strong>{{ $detailInsurance->insured_address }}</h5>
                                     <h5><strong>Tanggal Mulai : </strong>{{ Carbon\Carbon::parse($detailInsurance->join_date)->format('d M Y') }}</h5>
                                     <h5><strong>Tanggal Akhir : </strong>{{ Carbon\Carbon::parse($detailInsurance->expired_date)->format('d M Y') }}</h5>

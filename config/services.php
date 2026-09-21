@@ -30,4 +30,9 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    'waghub' => [
+        'url' => env('WAG_URL', 'https://waghub.mekayastudio.com/api/v1/messages'),
+        'token' => env('WAG_TOKEN'),
+    ],
+
 ];

@@ -21,6 +21,7 @@ use App\Http\Controllers\RequestController;
 use App\Http\Controllers\RequestTypeController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\UnitTypeController;
+use App\Http\Controllers\NotificationSettingController;
 use App\Models\Insurance;
 use Illuminate\Support\Facades\Route;
 
@@ -176,6 +177,12 @@ Route::group(['middleware' => ['auth', 'checkRole:1,3']], function(){
     Route::post('/request-settings/create', [DashboardController::class, 'createRequestSettings']);
     Route::get('/request-settings/{rs}/edit', [DashboardController::class, 'editRequestSettings']);
     Route::post('/request-settings/{rs}/update', [DashboardController::class, 'updateRequestSettings']);
+
+    #WHATSAPP NOTIFICATION SETTING
+    Route::get('notification-settings', [NotificationSettingController::class, 'index']);
+    Route::post('/notification-settings/update', [NotificationSettingController::class, 'update']);
+    Route::post('/notification-settings/test', [NotificationSettingController::class, 'testSend']);
+    Route::post('/notification-settings/replace-phones', [NotificationSettingController::class, 'replacePhones']);
 
     ##INSURANCE
     #INSURANCE

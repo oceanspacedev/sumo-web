@@ -34,6 +34,7 @@ class Rent extends Model
         'month_before_reminder',
         'user_id',
         'notes',
+        'reminder_phones',
     ];
 
     protected $hidden = [

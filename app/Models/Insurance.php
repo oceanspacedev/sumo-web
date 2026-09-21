@@ -37,6 +37,7 @@ class Insurance extends Model
         'payment_evidence',
         'status',
         'notes',
+        'reminder_phones',
     ];
 
     protected $hidden = [

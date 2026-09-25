@@ -128,6 +128,44 @@ class CarbonCompatibilityTest extends TestCase
         }
     }
 
+    public function test_empty_payment_evidence_does_not_crash_when_rent_directory_exists(): void
+    {
+        Storage::disk('local')->makeDirectory('public/Rent_File');
+
+        $rent = Rent::create(array_merge($this->rentAttributes('2025-01-01 00:00:00', '2026-01-01 00:00:00'), [
+            'rent_code' => 'RENT-EMPTY',
+            'payment_evidence_file' => null,
+        ]));
+        RentUpdate::create(array_merge($this->rentAttributes('2025-01-01 00:00:00', '2026-01-01 00:00:00'), [
+            'rent_id' => $rent->id,
+            'rent_code' => 'RENT-UPD',
+            'payment_evidence_file' => '',
+        ]));
+
+        $index = $this->get('/rent')->assertOk();
+        $row = $this->rowFor($index->getContent(), 'RENT-UPD');
+        $this->assertSame('Tidak ada file', $this->cellText($row, 19));
+
+        $show = $this->get('/rent/'.$rent->id)->assertOk();
+        $row = $this->rowFor($show->getContent(), 'RENT-UPD');
+        $this->assertStringContainsString('Tidak ada file', $this->normalize($row->textContent));
+    }
+
+    public function test_existing_payment_evidence_still_renders_document_link(): void
+    {
+        Storage::disk('local')->put('public/Rent_File/proof.pdf', 'proof');
+
+        Rent::create(array_merge($this->rentAttributes('2025-01-01 00:00:00', '2026-01-01 00:00:00'), [
+            'rent_code' => 'RENT-FILE',
+            'payment_evidence_file' => 'proof.pdf',
+        ]));
+
+        $index = $this->get('/rent')->assertOk();
+        $row = $this->rowFor($index->getContent(), 'RENT-FILE');
+        $this->assertStringContainsString('Lihat Dokumen', $this->normalize($row->textContent));
+        $this->assertStringContainsString('storage/Rent_File/proof.pdf', $row->ownerDocument->saveHTML($row));
+    }
+
     private function rentAttributes(string $join, string $expiry): array
     {
         return [

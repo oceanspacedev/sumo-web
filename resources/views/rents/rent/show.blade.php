@@ -195,8 +195,12 @@
                                             <td>{{ $detail->deduction_evidence}}</td>
                                             <td>{{ $detail->document}}</td>
                                             <td>
-                                                @if (Storage::exists('public/Rent_File/' . $detail->payment_evidence_file) && Storage::size('public/Rent_File/' . $detail->payment_evidence_file) > 0)
-                                                    <a href="{{ asset('storage/Rent_File/' . $detail->payment_evidence_file) }}">Lihat Dokumen</a></td>
+                                                @php
+                                                    $paymentFile = $detail->payment_evidence_file;
+                                                    $paymentPath = 'public/Rent_File/'.$paymentFile;
+                                                @endphp
+                                                @if (filled($paymentFile) && Storage::fileExists($paymentPath) && Storage::size($paymentPath) > 0)
+                                                    <a href="{{ asset('storage/Rent_File/' . $paymentFile) }}">Lihat Dokumen</a>
                                                 @else
                                                     Tidak ada file
                                                 @endif

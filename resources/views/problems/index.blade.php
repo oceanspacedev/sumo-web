@@ -102,7 +102,7 @@
                                             <td>{{ $problem->prcategory->problem_report_category }}</td>
                                             <td>{{ $problem->description }}</td>
                                             <!-- PHOTO BEFORE -->
-                                            @if (Storage::exists('public/Problem_Report_File/' . $problem->photo_before) && Storage::size('public/Problem_Report_File/' . $problem->photo_before) > 0)
+                                            @if (filled($problem->photo_before) && Storage::fileExists('public/Problem_Report_File/' . $problem->photo_before) && Storage::size('public/Problem_Report_File/' . $problem->photo_before) > 0)
                                                 <td><a href="{{ asset('storage/Problem_Report_File/' . $problem->photo_before) }}">Lihat</a></td>
                                             @else
                                                 <td>Tidak ada file</td>
@@ -113,7 +113,7 @@
                                             <td>{{ $problem->closed_at == null ? '' : Carbon\Carbon::parse($problem->closed_at)->format('d M Y H:i') }}</td>
                                             <td>{{ $problem->result_desc }}</td>
                                             <!-- PHOTO AFTER -->
-                                            @if (Storage::exists('public/Problem_Report_File/' . $problem->photo_after) && Storage::size('public/Problem_Report_File/' . $problem->photo_after) > 0)
+                                            @if (filled($problem->photo_after) && Storage::fileExists('public/Problem_Report_File/' . $problem->photo_after) && Storage::size('public/Problem_Report_File/' . $problem->photo_after) > 0)
                                                 <td><a href="{{ asset('storage/Problem_Report_File/' . $problem->photo_after) }}">Lihat</a></td>
                                             @else
                                                 <td>Tidak ada file</td>

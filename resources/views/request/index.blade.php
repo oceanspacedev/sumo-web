@@ -122,13 +122,13 @@
                                         <td>{{ optional($reqbar->request_type)->request_type ?? '-' }}</td>
                                         <!-- <td>{{ $reqbar->request_detail }}</td> -->
                                         <!-- LAMPIRAN -->
-                                        @if (Storage::exists('public/Request_File/' . $reqbar->request_file) && Storage::size('public/Request_File/' . $reqbar->request_file) > 0)
+                                        @if (filled($reqbar->request_file) && Storage::fileExists('public/Request_File/' . $reqbar->request_file) && Storage::size('public/Request_File/' . $reqbar->request_file) > 0)
                                             <td><a href="{{ asset('storage/Request_File/' . $reqbar->request_file) }}">Lihat Dokumen</a></td>
                                         @else
                                             <td>-</td>
                                         @endif
                                         <!-- LAMPIRAN 2 -->
-                                        @if (Storage::exists('public/Request_File/' . $reqbar->request_file_2) && Storage::size('public/Request_File/' . $reqbar->request_file_2) > 0)
+                                        @if (filled($reqbar->request_file_2) && Storage::fileExists('public/Request_File/' . $reqbar->request_file_2) && Storage::size('public/Request_File/' . $reqbar->request_file_2) > 0)
                                             <td><a href="{{ asset('storage/Request_File/' . $reqbar->request_file_2) }}">Lihat Dokumen</a></td>
                                         @else
                                             <td>-</td>

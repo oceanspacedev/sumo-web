@@ -283,18 +283,16 @@
                                             @endif
                                         </td>
                                         <td>
-                                            @if ($rent->rent_update->isNotEmpty())
-                                                @if (Storage::exists('public/Rent_File/' . $rent->rent_update->first()->payment_evidence_file) && Storage::size('public/Rent_File/' . $rent->rent_update->first()->payment_evidence_file) > 0)
-                                                    <a href="{{ asset('storage/Rent_File/' . $rent->rent_update->first()->payment_evidence_file) }}">Lihat Dokumen</a></td>
-                                                @else
-                                                    Tidak ada file
-                                                @endif
+                                            @php
+                                                $paymentFile = $rent->rent_update->isNotEmpty()
+                                                    ? $rent->rent_update->first()->payment_evidence_file
+                                                    : $rent->payment_evidence_file;
+                                                $paymentPath = 'public/Rent_File/'.$paymentFile;
+                                            @endphp
+                                            @if (filled($paymentFile) && Storage::fileExists($paymentPath) && Storage::size($paymentPath) > 0)
+                                                <a href="{{ asset('storage/Rent_File/' . $paymentFile) }}">Lihat Dokumen</a>
                                             @else
-                                                @if (Storage::exists('public/Rent_File/' . $rent->payment_evidence_file) && Storage::size('public/Rent_File/' . $rent->payment_evidence_file) > 0)
-                                                    <a href="{{ asset('storage/Rent_File/' . $rent->payment_evidence_file) }}">Lihat Dokumen</a></td>
-                                                @else
-                                                    Tidak ada file
-                                                @endif
+                                                Tidak ada file
                                             @endif
                                         </td>
                                         <td>
